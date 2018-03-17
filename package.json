@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "webpack": "^4.1.1",
+    "firebase": "^4.11.0",
     "standard": "^11.0.1",
+    "webpack": "^4.1.1",
     "webpack-cli": "^2.0.12"
   },
   "scripts": {
