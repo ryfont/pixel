@@ -3,6 +3,18 @@ require('firebase/database')
 const config = require('../config')
 const app = firebase.initializeApp(config)
 
+function parsePixel(s) {
+  let nums = s.match(/(\d+)\,(\d+)/)
+  return {
+    x: s[1],
+    y: s[2]
+  }
+}
+
+function parseMultiplePixels(s) {
+  return s.split("|").map(parsePixel)
+}
+
 export class Game {
   initialize (gameId) {
     this.onupdate = []
@@ -20,8 +32,52 @@ export class Game {
     f()
   }
 
+  pixels () {
+    let res = []
+    if (this.state && this.state.pixels && this.state.pixels.blue) {
+      res = res.concat(Object.values(this.state.pixels.blue))
+    }
+    if (this.state && this.state.pixels && this.state.pixels.red) {
+      res = res.concat(Object.values(this.state.pixels.red))
+    }
+    return res.map(parsePixel)
+  }
+
+  addPixel(x, y) {
+    // normally you'd want to use .push() here, but since only one unique writer for each object,
+    // we can keep track of it locally
+
+    // TODO
+  }
+
+  sketches () {
+    return this.state.sketches
+  }
+
+  addSketch () {
+    // TODO
+    // returns id of new sketch
+  }
+
+  removeSketch (sketchId) {
+    // TODO
+  }
+
+  rectangles () {
+    return this.state.rectangles
+  }
+
+  addRectangle () {
+    // TODO
+    // returns id of new rect
+  }
+
+  removeRectangle (rectId) {
+    // TODO
+  }
+
   players () {
-    this.state.players
+    return this.state.players
   }
 
   currentPlayer () {
@@ -29,6 +85,9 @@ export class Game {
   }
 
   setCurrentPlayer (player) {
+    if (["red", "blue", "judge"].indexOf(player) === -1) {
+      throw "Invalid player type"
+    }
     // TODO update database to reject new edits of player
     return this.dbref
       .child('players').child(player)
@@ -57,7 +116,8 @@ export class Game {
         .then(snap => {
           if (snap.val() === null) {
             gameState.set({
-              drawings: {red: {}, blue: {}},
+              sketches: {red: {}, blue: {}},
+              rectangles: {red: {}, blue: {}},
               image: "",
               pixels: {red: {}, blue: {}},
               players: {blue: 0, judge: 0, red: 0}
