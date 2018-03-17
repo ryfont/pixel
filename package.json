@@ -1,0 +1,15 @@
+{
+  "name": "pixel",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "webpack": "^4.1.1",
+    "standard": "^11.0.1",
+    "webpack-cli": "^2.0.12"
+  },
+  "scripts": {
+    "lint": "standard",
+    "build": "webpack",
+    "watch": "webpack --watch"
+  }
+}
