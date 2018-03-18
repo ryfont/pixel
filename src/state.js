@@ -15,6 +15,45 @@ function parseMultiplePixels(s) {
   return s.split("|").map(parsePixel)
 }
 
+// generates new game code and creates new game for it, and returns a promise containing the new game object
+export function freshNewGame () {
+  function genId (resolve) {
+    var newId = "";
+    var chars = "abcdefghijkmnpqrstuvwxyz23456789";
+
+    for (let i=0; i < 7; i++) {
+      newId += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // not sure how to avoid the race condition here with firebase
+    // but collisions are remarkably unlikely so I think it's ok
+    let gameState = firebase.database().ref(`games/${newId}`)
+    gameState
+      .once('value')
+      .then(snap => {
+        if (snap.val() === null) {
+          gameState.set({
+            sketches: {red: {}, blue: {}},
+            rectangles: {red: {}, blue: {}},
+            image: "",
+            pixels: {red: {}, blue: {}},
+            players: {blue: 0, judge: 0, red: 0}
+          })
+          resolve(newId)
+        } else {
+          console.warn("GAME ALREADY EXISTS:", snap.val())
+          genId(resolve)
+        }
+      })
+  }
+
+  return new Promise(function(resolve, reject) {
+    genId(resolve)
+  }).then((newId) => {
+    return new Game(newId)
+  })
+}
+
 export class Game {
   initialize (gameId) {
     this.onupdate = []
@@ -98,42 +137,4 @@ export class Game {
       })
   }
 
-  // generates new game code and creates new game for it, and returns a promise containing the new game object
-  static createNew () {
-    function genId (resolve) {
-      var newId = "";
-      var chars = "abcdefghijkmnpqrstuvwxyz23456789";
-
-      for (let i=0; i < 7; i++) {
-        newId += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-
-      // not sure how to avoid the race condition here with firebase
-      // but collisions are remarkably unlikely so I think it's ok
-      let gameState = firebase.database().ref(`games/${newId}`)
-      gameState
-        .once('value')
-        .then(snap => {
-          if (snap.val() === null) {
-            gameState.set({
-              sketches: {red: {}, blue: {}},
-              rectangles: {red: {}, blue: {}},
-              image: "",
-              pixels: {red: {}, blue: {}},
-              players: {blue: 0, judge: 0, red: 0}
-            })
-            resolve(newId)
-          } else {
-            console.warn("GAME ALREADY EXISTS:", snap.val())
-            genId(resolve)
-          }
-        })
-    }
-
-    return new Promise(function(resolve, reject) {
-      genId(resolve)
-    }).then((newId) => {
-      return new Game(newId)
-    })
-  }
 }
