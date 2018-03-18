@@ -71,7 +71,7 @@ export function freshNewGame () {
 }
 
 export class Game {
-  initialize (gameId) {
+  constructor (gameId) {
     this.onupdate = []
     this.state = null
     this.currentPlayer = null // role of this player, either 'red' 'blue' 'judge' or null
@@ -98,15 +98,18 @@ export class Game {
 
     // normally you'd want to use firebase's .push() here, but since only one unique writer for each object,
     // we can keep track of it locally
-    let i = nextIndex(this.state[drawingType][this.currentPlayer])
+    let i = 0
+    if (this.state[drawingType] !== undefined && this.state[drawingType][this.currentPlayer] !== undefined) {
+      i = nextIndex(this.state[drawingType][this.currentPlayer])
+    }
     this.dbref.child(drawingType).child(this.currentPlayer).child(i).set(data)
     return i
   }
 
   _removeDrawing (drawingType, index) {
     this._checkCanDraw()
-    this.dbref.child(drawingType).child(this.currentPlayer).child(i).set(null)
-    return i
+    this.dbref.child(drawingType).child(this.currentPlayer).child(index).set(null)
+    return index
   }
 
   pixels (player) {
@@ -161,10 +164,6 @@ export class Game {
     return this.state.players
   }
 
-  currentPlayer () {
-    return this.currentPlayer
-  }
-
   isLoading () {
     return this.state === null
   }
@@ -182,5 +181,4 @@ export class Game {
         this.currentPlayer = player
       })
   }
-
 }
