@@ -15,6 +15,22 @@ function parseMultiplePixels(s) {
   return s.split("|").map(parsePixel)
 }
 
+function serializeMultiplePixels(pixels) {
+  let parts = []
+  pixels.forEach(({x, y}) => {
+    parts.push([x,y].join(","))
+  })
+  return parts.join("|")
+}
+
+function nextIndex (obj) {
+  let i = 0
+  while (obj[i] !== undefined) {
+    i += 1
+  }
+  return i
+}
+
 // generates new game code and creates new game for it, and returns a promise containing the new game object
 export function freshNewGame () {
   function genId (resolve) {
@@ -71,59 +87,74 @@ export class Game {
     f()
   }
 
-  pixels () {
-    let res = []
-    if (this.state && this.state.pixels && this.state.pixels.blue) {
-      res = res.concat(Object.values(this.state.pixels.blue))
-    }
-    if (this.state && this.state.pixels && this.state.pixels.red) {
-      res = res.concat(Object.values(this.state.pixels.red))
-    }
-    return res.map(parsePixel)
-  }
-
   _checkCanDraw () {
     if (!this.state || !this.state.players || ["red", "blue"].indexOf(this.currentPlayer) === -1) {
       throw "Can only draw if current player is red or blue"
     }
   }
 
-  addPixel(x, y) {
+  _addDrawing (drawingType, data) {
     this._checkCanDraw()
-    // normally you'd want to use .push() here, but since only one unique writer for each object,
-    // we can keep track of it locally
 
-    // TODO
+    // normally you'd want to use firebase's .push() here, but since only one unique writer for each object,
+    // we can keep track of it locally
+    let i = nextIndex(this.state[drawingType][this.currentPlayer])
+    this.dbref.child(drawingType).child(this.currentPlayer).child(i).set(data)
+    return i
+  }
+
+  _removeDrawing (drawingType, index) {
+    this._checkCanDraw()
+    this.dbref.child(drawingType).child(this.currentPlayer).child(i).set(null)
+    return i
+  }
+
+  pixels (player) {
+    if (this.state && this.state.pixels && this.state.pixels[player]) {
+      return Object.values(this.state.pixels[player]).map(parsePixel)
+    }
+    return []
+  }
+
+  addPixel(x, y) {
+    let str = serializeMultiplePixels([{x, y}])
+    return this._addDrawing('pixels', str)
   }
 
   sketches () {
-    return this.state.sketches
+    if (this.state && this.state.sketches && this.state.sketches[player]) {
+      return Object.values(this.state.pixels[player]).map(parseMultiplePixels)
+    }
+    return []
   }
 
-  addSketch () {
-    this._checkCanDraw()
-    // TODO
-    // returns id of new sketch
+  // points is array of {x: int, y: int} objects
+  addSketch (points) {
+    let str = serializeMultiplePixels(points)
+    return this._addDrawing('sketches', str)
   }
 
   removeSketch (sketchId) {
-    this._checkCanDraw()
-    // TODO
+    return this._removeDrawing('sketches', sketchId)
   }
 
   rectangles () {
-    return this.state.rectangles
+    if (this.state && this.state.sketches && this.state.sketches[player]) {
+      return Object.values(this.state.pixels[player]).map(str => {
+        let res = parseMultiplePixels(str)
+        return {x: res[0].x, y: res[0].y, w: res[1].x, h: res[1].y}
+      })
+    }
+    return []
   }
 
-  addRectangle () {
-    this._checkCanDraw()
-    // TODO
-    // returns id of new rect
+  addRectangle (x, y, w, h) {
+    let str = serializeMultiplePixels([{x: x, y: y}, {x: w, y: h}])
+    return this._addDrawing('rectangles', str)
   }
 
   removeRectangle (rectId) {
-    this._checkCanDraw()
-    // TODO
+    return this._removeDrawing('rectangles', rectId)
   }
 
   players () {
@@ -132,6 +163,10 @@ export class Game {
 
   currentPlayer () {
     return this.currentPlayer
+  }
+
+  isLoading () {
+    return this.state === null
   }
 
   setCurrentPlayer (player) {
