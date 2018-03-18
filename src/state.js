@@ -82,7 +82,14 @@ export class Game {
     return res.map(parsePixel)
   }
 
+  _checkCanDraw () {
+    if (!this.state || !this.state.players || ["red", "blue"].indexOf(this.currentPlayer) === -1) {
+      throw "Can only draw if current player is red or blue"
+    }
+  }
+
   addPixel(x, y) {
+    this._checkCanDraw()
     // normally you'd want to use .push() here, but since only one unique writer for each object,
     // we can keep track of it locally
 
@@ -94,11 +101,13 @@ export class Game {
   }
 
   addSketch () {
+    this._checkCanDraw()
     // TODO
     // returns id of new sketch
   }
 
   removeSketch (sketchId) {
+    this._checkCanDraw()
     // TODO
   }
 
@@ -107,11 +116,13 @@ export class Game {
   }
 
   addRectangle () {
+    this._checkCanDraw()
     // TODO
     // returns id of new rect
   }
 
   removeRectangle (rectId) {
+    this._checkCanDraw()
     // TODO
   }
 
