@@ -54,6 +54,17 @@ const PlayerSelectionPage = {
   },
   view: (vnode) => {
     let g = vnode.attrs.game
+    let leaveGameButton = m("button", {
+      onclick: () => {
+        vnode.attrs.setGame(null)
+      }
+    }, "Leave Game")
+    if (vnode.attrs.game.gameFull()) {
+      return m("div", [
+        m("p", "Looks like this game is already full. Try another one?"),
+        leaveGameButton
+      ])
+    }
     return m("div", [
       m("p", `Your game code: ${g.code}`),
       m("div", ["red", "blue", "judge"].map(p => {
@@ -79,11 +90,7 @@ const PlayerSelectionPage = {
           button
         ])
       })),
-      m("button", {
-        onclick: () => {
-          vnode.attrs.setGame(null)
-        }
-      }, "Leave Game")
+      leaveGameButton
     ])
   },
 }
