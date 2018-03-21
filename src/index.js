@@ -109,7 +109,6 @@ const Page = {
     let setGame = (g) => {
       vnode.state.game = g
       if (g !== null) {
-        console.log(g)
         g.onUpdate(m.redraw)
       }
     }
