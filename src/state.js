@@ -1,6 +1,8 @@
-const firebase = require('firebase/app')
-require('firebase/database')
-const config = require('../config')
+import firebase from 'firebase/app'
+import {} from 'firebase/database'
+import config from '../config'
+import m from 'mithril'
+
 const app = firebase.initializeApp(config)
 
 function parsePixel(s) {
@@ -29,6 +31,14 @@ function nextIndex (obj) {
     i += 1
   }
   return i
+}
+
+// returns promise that resolves to true or false
+export function gameExists (checkId) {
+  let gameState = firebase.database().ref(`games/${checkId}`)
+  return gameState
+    .once('value')
+    .then(snap => !!(snap.val()))
 }
 
 // generates new game code and creates new game for it, and returns a promise containing the new game object
@@ -72,18 +82,19 @@ export function freshNewGame () {
 
 export class Game {
   constructor (gameId) {
-    this.onupdate = []
+    this.onUpdates = []
     this.state = null
+    this.code = gameId
     this.currentPlayer = null // role of this player, either 'red' 'blue' 'judge' or null
     this.dbref = firebase.database().ref(`games/${gameId}`)
     this.dbref.on('value', snap => {
       this.state = snap.val()
-      this.onupdate.forEach(f => { f() })
+      this.onUpdates.forEach(f => { f() })
     })
   }
 
-  onupdate (f) {
-    this.onupdate.push(f)
+  onUpdate (f) {
+    this.onUpdates.push(f)
     f()
   }
 
@@ -110,6 +121,17 @@ export class Game {
     this._checkCanDraw()
     this.dbref.child(drawingType).child(this.currentPlayer).child(index).set(null)
     return index
+  }
+
+  gamePlaying () {
+    return (this.gameFull() && this.currentPlayer !== null)
+  }
+
+  gameFull () {
+    return (this.state
+      && this.state.players.red === 1
+      && this.state.players.blue === 1
+      && this.state.players.judge === 1)
   }
 
   pixels (player) {
