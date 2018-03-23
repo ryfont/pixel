@@ -8,13 +8,13 @@ function updateCanvas(vnode) {
   game.sketches("red").forEach(sketch => {
     let sketchData = JSON.parse(sketch)
     var path = new fabric.Path(sketchData.path);
-    path.set({ strokeWidth: 10, stroke: "#f00", strokeLineCap: "round", fill: 'transparent', top: sketchData.top, left: sketchData.left});
+    path.set({ strokeWidth: 10, stroke: "#f00", strokeLineCap: "round", fill: 'transparent', top: sketchData.top, left: sketchData.left, selectable: false});
     canvas.add(path);
   })
   game.sketches("blue").forEach(sketch => {
     let sketchData = JSON.parse(sketch)
     var path = new fabric.Path(sketchData.path);
-    path.set({ strokeWidth: 10, stroke: "#00f", strokeLineCap: "round", fill: 'transparent', top: sketchData.top, left: sketchData.left});
+    path.set({ strokeWidth: 10, stroke: "#00f", strokeLineCap: "round", fill: 'transparent', top: sketchData.top, left: sketchData.left, selectable: false});
     canvas.add(path);
   })
 }
@@ -22,14 +22,12 @@ function updateCanvas(vnode) {
 export default {
   oncreate: (vnode) => {
     vnode.state.canvas = new fabric.Canvas('play', {
-      isDrawingMode: vnode.attrs.game.currentPlayer !== 'judge',
-      selection: false
+      isDrawingMode: vnode.attrs.game.currentPlayer !== 'judge'
     })
     let canvas = vnode.state.canvas
     canvas.freeDrawingBrush.color = vnode.attrs.game.currentPlayer === "red" ? "#f00" : "#00f"
     canvas.freeDrawingBrush.width = 10
     canvas.on('path:created', ({path}) => {
-      console.log(path)
       let pathString = path.toJSON().path.map(p => p.join(" ")).join(" ")
       vnode.attrs.game.addSketch(JSON.stringify({path: pathString, left: path.left, top: path.top}))
       m.redraw()
