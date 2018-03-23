@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "fabric": "^2.2.2",
     "firebase": "^4.11.0",
     "mithril": "^1.1.6",
     "standard": "^11.0.1",

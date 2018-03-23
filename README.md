@@ -1,6 +1,20 @@
 Single pixel debate game
 ========================
 
+TODO ADD
+
+```
+firebaseRef.child('.info/connected').on('value', function(connectedSnap) {
+  if (connectedSnap.val() === true) {
+    /* we're connected! */
+  } else {
+    /* we're disconnected! */
+  }
+});
+```
+
+from https://stackoverflow.com/questions/11351689/detect-if-firebase-connection-is-lost-regained
+
 # Discussion
 
 (Copied over from the Google doc)

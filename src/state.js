@@ -146,17 +146,16 @@ export class Game {
     return this._addDrawing('pixels', str)
   }
 
-  sketches () {
+  sketches (player) {
     if (this.state && this.state.sketches && this.state.sketches[player]) {
-      return Object.values(this.state.pixels[player]).map(parseMultiplePixels)
+      return Object.values(this.state.sketches[player])
     }
     return []
   }
 
   // points is array of {x: int, y: int} objects
-  addSketch (points) {
-    let str = serializeMultiplePixels(points)
-    return this._addDrawing('sketches', str)
+  addSketch (pathString) {
+    return this._addDrawing('sketches', pathString)
   }
 
   removeSketch (sketchId) {

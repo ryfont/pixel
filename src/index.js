@@ -21,7 +21,7 @@ const Page = {
     } else if (!vnode.state.game.gamePlaying()) {
       return m(PlayerSelectionPage, {game: vnode.state.game, setGame})
     } else {
-      return m(GamePlayPage)
+      return m(GamePlayPage, {game: vnode.state.game, setGame})
     }
   },
 }
