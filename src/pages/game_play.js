@@ -5,18 +5,16 @@ function updateCanvas(vnode) {
   let canvas = vnode.state.canvas
   let game = vnode.attrs.game
   canvas.clear()
-  game.sketches("red").forEach(sketch => {
-    let sketchData = JSON.parse(sketch)
-    var path = new fabric.Path(sketchData.path);
-    path.set({ strokeWidth: 10, stroke: "#f00", strokeLineCap: "round", fill: 'transparent', top: sketchData.top, left: sketchData.left, selectable: false});
-    canvas.add(path);
-  })
-  game.sketches("blue").forEach(sketch => {
-    let sketchData = JSON.parse(sketch)
-    var path = new fabric.Path(sketchData.path);
-    path.set({ strokeWidth: 10, stroke: "#00f", strokeLineCap: "round", fill: 'transparent', top: sketchData.top, left: sketchData.left, selectable: false});
-    canvas.add(path);
-  })
+  function sketchHandler(color) {
+    return (sketch) => {
+      let sketchData = JSON.parse(sketch)
+      var path = new fabric.Path(sketchData.path);
+      path.set({ strokeWidth: 10, stroke: color, strokeLineCap: "round", fill: 'transparent', top: sketchData.top, left: sketchData.left, selectable: false});
+      canvas.add(path);
+    }
+  }
+  game.sketches("red").forEach(sketchHandler("#f00"))
+  game.sketches("blue").forEach(sketchHandler("#00f"))
 }
 
 export default {
