@@ -6,6 +6,7 @@
     "fabric": "^2.2.2",
     "firebase": "^4.11.0",
     "mithril": "^1.1.6",
+    "pica": "^4.0.2",
     "standard": "^11.0.1",
     "webpack": "^4.1.1",
     "webpack-cli": "^2.0.12"

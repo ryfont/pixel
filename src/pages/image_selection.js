@@ -4,6 +4,7 @@ export default {
   oninit: (vnode) => {
     vnode.state.loading = false
     vnode.state.imageUrlText = ""
+    vnode.state.error = null
   },
   view: (vnode) => {
     let g = vnode.attrs.game
@@ -27,6 +28,7 @@ export default {
               vnode.state.loading = true
               g.setImageUrl(vnode.state.imageUrlText)
                 .then(() => {
+                  vnode.state.loading = false
                   m.redraw()
                 })
                 .catch(() => {

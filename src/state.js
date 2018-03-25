@@ -1,8 +1,28 @@
 import firebase from 'firebase/app'
 import {} from 'firebase/database'
 import config from '../config'
+const pica = require('pica/dist/pica')()
 
 const app = firebase.initializeApp(config)
+
+function getImage (url) {
+  return new Promise((resolve, reject) => {
+    let i = new Image()
+    i.onload = () => resolve(i)
+    i.onerror = () => reject()
+    i.src = url
+  })
+}
+
+function resizedImage (url) {
+  return getImage(url).then(image => {
+    let dest = document.createElement("canvas")
+    dest.width = 500
+    dest.height = 500
+    pica.resize(image, dest)
+    return dest.toDataURL()
+  })
+}
 
 function parsePixel (s) {
   let nums = s.match(/(\d+),(\d+)/)
@@ -172,8 +192,10 @@ export class Game {
   }
 
   setImageUrl (url) {
-    // TODO CHECK IF URL IS VALID IMAGE
-    return this.dbref.child('image').set(url)
+    return resizedImage(url)
+      .then(() => {
+        return this.dbref.child('image').set(url)
+      })
   }
 
   // points is array of {x: int, y: int} objects
