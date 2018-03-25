@@ -42,7 +42,7 @@ function updateCanvas (vnode) {
 
 export default {
   oninit: (vnode) => {
-    vnode.state.tool = 'sketch' // either 'sketch', 'rect', 'erase'
+    vnode.state.tool = 'sketch' // either 'sketch', 'rect', 'pixel', 'erase'
     vnode.state.viewingPlayer = vnode.attrs.game.currentPlayer === 'blue' ? 'blue' : 'red'
   },
   oncreate: (vnode) => {
@@ -66,8 +66,8 @@ export default {
     }
 
     let playerbar = m('div', [
-      button('viewingPlayer', 'red', 'Red Player'),
-      button('viewingPlayer', 'blue', 'Blue Player'),
+      button('viewingPlayer', 'red', vnode.attrs.game.currentPlayer === 'red' ? 'Your Drawing' : "Red's Drawing"),
+      button('viewingPlayer', 'blue', vnode.attrs.game.currentPlayer === 'blue' ? 'Your Drawing' : "Blue's Drawing"),
     ])
 
     let toolbar = null
@@ -75,6 +75,7 @@ export default {
       toolbar = m('div', [
         button('tool', 'sketch', 'Sketch Tool'),
         button('tool', 'rect', 'Rectangle Tool'),
+        button('tool', 'pixel', 'Pixel Reveal Tool'),
         button('tool', 'erase', 'Eraser'),
       ])
     }
