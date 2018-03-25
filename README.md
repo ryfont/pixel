@@ -1,9 +1,17 @@
 Single pixel debate game
 ========================
 
-TODO ADD
+## Instructions
 
-```
+    npm install
+    npm run build
+    open build/index.html
+
+## TODO
+
+- [ ] indicate firebase connection status to user:
+
+```js
 firebaseRef.child('.info/connected').on('value', function(connectedSnap) {
   if (connectedSnap.val() === true) {
     /* we're connected! */
