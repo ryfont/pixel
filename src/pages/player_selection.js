@@ -8,15 +8,10 @@ export default {
     let g = vnode.attrs.game
     let leaveGameButton = m('button', {
       onclick: () => {
+        g.leave()
         vnode.attrs.setGame(null)
       }
     }, 'Leave Game')
-    if (vnode.attrs.game.gameFull()) {
-      return m('div', [
-        m('p', 'Looks like this game is already full. Try another one?'),
-        leaveGameButton
-      ])
-    }
     return m('div', [
       m('p', `Your game code: ${g.code}`),
       m('div', ['red', 'blue', 'judge'].map(p => {

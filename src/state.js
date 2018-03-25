@@ -122,15 +122,22 @@ export class Game {
     return index
   }
 
-  gamePlaying () {
-    return (this.gameFull() && this.currentPlayer !== null)
+  // 'hash' game code to get who is the liar and who selects the image
+  _redIsLiar () {
+    let num = 0
+    this.code.split("").forEach((char, i) => {
+      num += char.charCodeAt() * i
+    })
+    return num % 12 < 6
   }
 
-  gameFull () {
-    return (this.state &&
-      this.state.players.red === 1 &&
-      this.state.players.blue === 1 &&
-      this.state.players.judge === 1)
+  isImageSelector () {
+    return this.currentPlayer !== 'judge' && !this.isLiar()
+  }
+
+  isLiar () {
+    let redLies = this._redIsLiar()
+    return (redLies && this.currentPlayer === 'red') || (!redLies && this.currentPlayer === 'blue')
   }
 
   pixels (player) {
@@ -149,7 +156,24 @@ export class Game {
     if (this.state && this.state.sketches && this.state.sketches[player]) {
       return this.state.sketches[player]
     }
-    return []
+    return {}
+  }
+
+  imageUrl () {
+    if (this.state && this.state.image) {
+      return this.state.image
+    }
+    return ""
+  }
+
+  image () {
+    // TODO RETURN RESIZED IMAGE
+    // but also cache the image data
+  }
+
+  setImageUrl (url) {
+    // TODO CHECK IF URL IS VALID IMAGE
+    return this.dbref.child('image').set(url)
   }
 
   // points is array of {x: int, y: int} objects
@@ -184,8 +208,23 @@ export class Game {
     return this.state.players
   }
 
-  isLoading () {
-    return this.state === null
+  // returns string of game state
+  currentState () {
+    if (this.state === null) {
+      return 'loading'
+    }
+    if (this.state.players.red !== 1 ||
+      this.state.players.blue !== 1 ||
+      this.state.players.judge !== 1) {
+      return 'player_selection'
+    }
+    if (this.currentPlayer === null) {
+      return 'full'
+    }
+    if (this.imageUrl() === "") {
+      return 'image_selection'
+    }
+    return 'playing'
   }
 
   setCurrentPlayer (player) {
@@ -200,5 +239,17 @@ export class Game {
         // successfully set player
         this.currentPlayer = player
       })
+  }
+
+  leave () {
+    if (this.currentPlayer !== null) {
+      return this.dbref
+        .child('players').child(this.currentPlayer)
+        .set(0)
+        .then(() => {
+          // successfully set player
+          this.currentPlayer = null
+        })
+    }
   }
 }
