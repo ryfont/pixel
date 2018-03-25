@@ -31,9 +31,9 @@ export default {
                   vnode.state.loading = false
                   m.redraw()
                 })
-                .catch(() => {
+                .catch((e) => {
                   vnode.state.loading = false
-                  vnode.state.error = `Either that image couldn't be found, or isn't set up to allow loading from other domains.`
+                  vnode.state.error = `Either that image couldn't be found, or isn't set up to allow loading from other domains: ${e}`
                   m.redraw()
                 })
             }

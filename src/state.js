@@ -9,19 +9,23 @@ function getImage (url) {
   return new Promise((resolve, reject) => {
     let i = new Image()
     i.onload = () => resolve(i)
-    i.onerror = () => reject()
+    i.onerror = reject
+    i.crossOrigin = "meow"
     i.src = url
   })
 }
 
 function resizedImage (url) {
-  return getImage(url).then(image => {
-    let dest = document.createElement("canvas")
-    dest.width = 500
-    dest.height = 500
-    pica.resize(image, dest)
-    return dest.toDataURL()
-  })
+  let dest = document.createElement("canvas")
+  dest.width = 500
+  dest.height = 500
+  return getImage(url)
+    .then(image => {
+      return pica.resize(image, dest)
+    })
+    .then(() => {
+      return dest.toDataURL()
+    })
 }
 
 function parsePixel (s) {
@@ -187,8 +191,7 @@ export class Game {
   }
 
   image () {
-    // TODO RETURN RESIZED IMAGE
-    // but also cache the image data
+    return resizedImage(this.imageUrl())
   }
 
   setImageUrl (url) {

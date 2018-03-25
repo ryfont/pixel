@@ -2,24 +2,29 @@ import m from 'mithril'
 import {fabric} from 'fabric'
 
 const COLORS = {
-  RED: '#D33159',
-  BLUE: '#3187D3',
-  RED_FADED: '#F7DCE3',
-  BLUE_FADED: '#DCEAF7'
+  RED: 'rgba(211, 49, 89, 0.9)',
+  BLUE: 'rgba(49, 135, 211, 0.9)',
+  RED_FULL: 'rgba(211, 49, 89, 1)',
+  BLUE_FULL: 'rgba(49, 135, 211, 1)',
+  RED_FADED: 'rgba(211, 49, 89, 0.2)',
+  BLUE_FADED: 'rgba(49, 135, 211, 0.2)'
 }
 
 function updateCanvas (vnode) {
-  let {canvas, tool} = vnode.state
+  let {canvas, tool, img} = vnode.state
   let game = vnode.attrs.game
   canvas.clear()
   let canEdit = vnode.attrs.game.currentPlayer === vnode.state.viewingPlayer
   canvas.isDrawingMode = canEdit && vnode.state.tool === 'sketch'
-  canvas.freeDrawingBrush.color = vnode.attrs.game.currentPlayer === 'red' ? COLORS.RED : COLORS.BLUE
+  canvas.freeDrawingBrush.color = vnode.attrs.game.currentPlayer === 'red' ? COLORS.RED_FULL : COLORS.BLUE_FULL
   canvas.freeDrawingBrush.width = 10
   canvas.hoverCursor = 'default'
   canvas.selection = false
   if (canEdit && tool !== 'erase') {
     canvas.hoverCursor = 'crosshair'
+  }
+  if (img && (game.currentPlayer !== 'judge' || vnode.state.revealImage)) {
+    canvas.add(img)
   }
   function sketchHandler (color) {
     return ([player, sketchId, sketch]) => {
@@ -56,6 +61,7 @@ export default {
   oninit: (vnode) => {
     vnode.state.tool = 'sketch' // either 'sketch', 'rect', 'pixel', 'erase'
     vnode.state.viewingPlayer = vnode.attrs.game.currentPlayer === 'blue' ? 'blue' : 'red'
+    vnode.state.revealImage = false
   },
   oncreate: (vnode) => {
     vnode.state.canvas = new fabric.Canvas('play')
@@ -69,6 +75,14 @@ export default {
         vnode.attrs.game.removeSketch(target.firebaseId)
         m.redraw()
       }
+    })
+    vnode.state.img = null
+    vnode.attrs.game.image().then(imgDataUrl => {
+      fabric.Image.fromURL(imgDataUrl, function(imgObj) {
+        vnode.state.img = imgObj
+        vnode.state.img.selectable = false
+        m.redraw()
+      })
     })
     updateCanvas(vnode)
   },
