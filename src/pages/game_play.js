@@ -10,6 +10,8 @@ const COLORS = {
   BLUE_FADED: 'rgba(49, 135, 211, 0.2)'
 }
 
+const PIXEL_WIDTH = 20
+
 function updateCanvas (vnode) {
   let {canvas, tool, img} = vnode.state
   let game = vnode.attrs.game
@@ -55,11 +57,32 @@ function updateCanvas (vnode) {
     getSketches('red').forEach(sketchHandler(COLORS.RED_FADED))
     getSketches('blue').forEach(sketchHandler(COLORS.BLUE))
   }
+  function pixelHandler (color) {
+    return ({x,y}) => {
+      if (vnode.state.imgCanvas) {
+        let pixelData = vnode.state.imgCanvas.getContext('2d').getImageData(x, y, 1, 1).data
+        let rect = new fabric.Rect({
+          left: x - PIXEL_WIDTH/2,
+          top: y - PIXEL_WIDTH/2,
+          fill: `rgba(${pixelData.join(',')})`,
+          width: PIXEL_WIDTH,
+          height: PIXEL_WIDTH,
+          stroke: color,
+          strokeWidth: 2,
+          rx: 3,
+          ry: 3
+        })
+        canvas.add(rect)
+      }
+    }
+  }
+  game.pixels('red').forEach(pixelHandler(COLORS.RED_FULL))
+  game.pixels('blue').forEach(pixelHandler(COLORS.BLUE_FULL))
 }
 
 export default {
   oninit: (vnode) => {
-    vnode.state.tool = 'sketch' // either 'sketch', 'rect', 'pixel', 'erase'
+    vnode.state.tool = 'sketch' // either 'sketch', 'pixel', 'erase'
     vnode.state.viewingPlayer = vnode.attrs.game.currentPlayer === 'blue' ? 'blue' : 'red'
     vnode.state.revealImage = false
   },
@@ -75,10 +98,15 @@ export default {
         vnode.attrs.game.removeSketch(target.firebaseId)
         m.redraw()
       }
+      if (vnode.state.tool === 'pixel') {
+        let {x, y} = vnode.state.canvas.getPointer(e)
+        vnode.attrs.game.addPixel(x, y)
+      }
     })
     vnode.state.img = null
-    vnode.attrs.game.image().then(imgDataUrl => {
-      fabric.Image.fromURL(imgDataUrl, function(imgObj) {
+    vnode.attrs.game.image().then(imgCanvas => {
+      vnode.state.imgCanvas = imgCanvas
+      fabric.Image.fromURL(imgCanvas.toDataURL(), function(imgObj) {
         vnode.state.img = imgObj
         vnode.state.img.selectable = false
         m.redraw()
@@ -106,7 +134,6 @@ export default {
     if (vnode.attrs.game.currentPlayer === vnode.state.viewingPlayer) {
       toolbar = m('div', [
         button('tool', 'sketch', 'Sketch Tool'),
-        button('tool', 'rect', 'Rectangle Tool'),
         button('tool', 'pixel', 'Pixel Reveal Tool'),
         button('tool', 'erase', 'Eraser'),
       ])

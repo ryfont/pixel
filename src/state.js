@@ -24,16 +24,18 @@ function resizedImage (url) {
       return pica.resize(image, dest)
     })
     .then(() => {
-      return dest.toDataURL()
+      dest.toDataURL() // make sure this doesn't error
+      return dest
     })
 }
 
 function parsePixel (s) {
   let nums = s.match(/(\d+),(\d+)/)
-  return {
+  let res = {
     x: nums[1],
     y: nums[2]
   }
+  return res
 }
 
 function parseMultiplePixels (s) {
@@ -43,7 +45,7 @@ function parseMultiplePixels (s) {
 function serializeMultiplePixels (pixels) {
   let parts = []
   pixels.forEach(({x, y}) => {
-    parts.push([x, y].join(','))
+    parts.push([x, y].map(Math.floor).join(','))
   })
   return parts.join('|')
 }
