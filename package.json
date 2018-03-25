@@ -5,6 +5,7 @@
   "dependencies": {
     "fabric": "^2.2.2",
     "firebase": "^4.11.0",
+    "firebase-tools": "^3.17.7",
     "mithril": "^1.1.6",
     "pica": "^4.0.2",
     "standard": "^11.0.1",
@@ -14,6 +15,8 @@
   "scripts": {
     "lint": "standard",
     "build": "webpack",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "fb": "firebase",
+    "deploy": "webpack && firebase deploy"
   }
 }
