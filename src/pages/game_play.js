@@ -17,6 +17,7 @@ function updateCanvas (vnode) {
   canvas.freeDrawingBrush.color = vnode.attrs.game.currentPlayer === 'red' ? COLORS.RED : COLORS.BLUE
   canvas.freeDrawingBrush.width = 10
   canvas.hoverCursor = 'default'
+  canvas.selection = false
   if (canEdit && tool !== 'erase') {
     canvas.hoverCursor = 'crosshair'
   }
