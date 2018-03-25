@@ -3,21 +3,21 @@ import {freshNewGame, Game, gameExists} from '../state'
 
 export default {
   oninit: (vnode) => {
-    vnode.state.gameIdText = ""
+    vnode.state.gameIdText = ''
     vnode.state.loading = false
     vnode.state.error = null
   },
   view: (vnode) => {
-    return m("div", [
-      m("button", {
+    return m('div', [
+      m('button', {
         disabled: vnode.state.loading,
         onclick: () => {
           vnode.state.loading = true
           freshNewGame().then(vnode.attrs.setGame).then(m.redraw)
         }
-      }, "Create New Game"),
-      m("form", [
-        m("input", {
+      }, 'Create New Game'),
+      m('form', [
+        m('input', {
           placeholder: 'Existing game code',
           disabled: vnode.state.loading,
           value: vnode.state.gameIdText,
@@ -25,7 +25,7 @@ export default {
             vnode.state.gameIdText = e.target.value
           }
         }),
-        m("button", {
+        m('button', {
           type: 'submit',
           disabled: vnode.state.loading,
           onclick: (e) => {
@@ -41,9 +41,9 @@ export default {
               m.redraw()
             })
           }
-        }, "Join Game"),
-        vnode.state.error ? m("p", vnode.state.error) : null
+        }, 'Join Game'),
+        vnode.state.error ? m('p', vnode.state.error) : null
       ])
     ])
-  },
+  }
 }

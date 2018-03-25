@@ -1,28 +1,27 @@
 import firebase from 'firebase/app'
 import {} from 'firebase/database'
 import config from '../config'
-import m from 'mithril'
 
 const app = firebase.initializeApp(config)
 
-function parsePixel(s) {
-  let nums = s.match(/(\d+)\,(\d+)/)
+function parsePixel (s) {
+  let nums = s.match(/(\d+),(\d+)/)
   return {
-    x: s[1],
-    y: s[2]
+    x: nums[1],
+    y: nums[2]
   }
 }
 
-function parseMultiplePixels(s) {
-  return s.split("|").map(parsePixel)
+function parseMultiplePixels (s) {
+  return s.split('|').map(parsePixel)
 }
 
-function serializeMultiplePixels(pixels) {
+function serializeMultiplePixels (pixels) {
   let parts = []
   pixels.forEach(({x, y}) => {
-    parts.push([x,y].join(","))
+    parts.push([x, y].join(','))
   })
-  return parts.join("|")
+  return parts.join('|')
 }
 
 function nextIndex (obj) {
@@ -35,7 +34,7 @@ function nextIndex (obj) {
 
 // returns promise that resolves to true or false
 export function gameExists (checkId) {
-  let gameState = firebase.database().ref(`games/${checkId}`)
+  let gameState = app.database().ref(`games/${checkId}`)
   return gameState
     .once('value')
     .then(snap => !!(snap.val()))
@@ -44,16 +43,16 @@ export function gameExists (checkId) {
 // generates new game code and creates new game for it, and returns a promise containing the new game object
 export function freshNewGame () {
   function genId (resolve) {
-    var newId = "";
-    var chars = "abcdefghijkmnpqrstuvwxyz23456789";
+    var newId = ''
+    var chars = 'abcdefghijkmnpqrstuvwxyz23456789'
 
-    for (let i=0; i < 7; i++) {
-      newId += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < 7; i++) {
+      newId += chars.charAt(Math.floor(Math.random() * chars.length))
     }
 
     // not sure how to avoid the race condition here with firebase
     // but collisions are remarkably unlikely so I think it's ok
-    let gameState = firebase.database().ref(`games/${newId}`)
+    let gameState = app.database().ref(`games/${newId}`)
     gameState
       .once('value')
       .then(snap => {
@@ -61,19 +60,19 @@ export function freshNewGame () {
           gameState.set({
             sketches: {red: {}, blue: {}},
             rectangles: {red: {}, blue: {}},
-            image: "",
+            image: '',
             pixels: {red: {}, blue: {}},
             players: {blue: 0, judge: 0, red: 0}
           })
           resolve(newId)
         } else {
-          console.warn("GAME ALREADY EXISTS:", snap.val())
+          console.warn('GAME ALREADY EXISTS:', snap.val())
           genId(resolve)
         }
       })
   }
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     genId(resolve)
   }).then((newId) => {
     return new Game(newId)
@@ -86,7 +85,7 @@ export class Game {
     this.state = null
     this.code = gameId
     this.currentPlayer = null // role of this player, either 'red' 'blue' 'judge' or null
-    this.dbref = firebase.database().ref(`games/${gameId}`)
+    this.dbref = app.database().ref(`games/${gameId}`)
     this.dbref.on('value', snap => {
       this.state = snap.val()
       this.onUpdates.forEach(f => { f() })
@@ -99,8 +98,8 @@ export class Game {
   }
 
   _checkCanDraw () {
-    if (!this.state || !this.state.players || ["red", "blue"].indexOf(this.currentPlayer) === -1) {
-      throw "Can only draw if current player is red or blue"
+    if (!this.state || !this.state.players || ['red', 'blue'].indexOf(this.currentPlayer) === -1) {
+      throw 'Can only draw if current player is red or blue'
     }
   }
 
@@ -128,10 +127,10 @@ export class Game {
   }
 
   gameFull () {
-    return (this.state
-      && this.state.players.red === 1
-      && this.state.players.blue === 1
-      && this.state.players.judge === 1)
+    return (this.state &&
+      this.state.players.red === 1 &&
+      this.state.players.blue === 1 &&
+      this.state.players.judge === 1)
   }
 
   pixels (player) {
@@ -141,7 +140,7 @@ export class Game {
     return []
   }
 
-  addPixel(x, y) {
+  addPixel (x, y) {
     let str = serializeMultiplePixels([{x, y}])
     return this._addDrawing('pixels', str)
   }
@@ -162,7 +161,7 @@ export class Game {
     return this._removeDrawing('sketches', sketchId)
   }
 
-  rectangles () {
+  rectangles (player) {
     if (this.state && this.state.sketches && this.state.sketches[player]) {
       return Object.values(this.state.pixels[player]).map(str => {
         let res = parseMultiplePixels(str)
@@ -190,8 +189,8 @@ export class Game {
   }
 
   setCurrentPlayer (player) {
-    if (["red", "blue", "judge"].indexOf(player) === -1) {
-      throw "Invalid player type"
+    if (['red', 'blue', 'judge'].indexOf(player) === -1) {
+      throw 'Invalid player type'
     }
     // TODO update database to reject new edits of player
     return this.dbref

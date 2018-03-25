@@ -6,25 +6,25 @@ export default {
   },
   view: (vnode) => {
     let g = vnode.attrs.game
-    let leaveGameButton = m("button", {
+    let leaveGameButton = m('button', {
       onclick: () => {
         vnode.attrs.setGame(null)
       }
-    }, "Leave Game")
+    }, 'Leave Game')
     if (vnode.attrs.game.gameFull()) {
-      return m("div", [
-        m("p", "Looks like this game is already full. Try another one?"),
+      return m('div', [
+        m('p', 'Looks like this game is already full. Try another one?'),
         leaveGameButton
       ])
     }
-    return m("div", [
-      m("p", `Your game code: ${g.code}`),
-      m("div", ["red", "blue", "judge"].map(p => {
+    return m('div', [
+      m('p', `Your game code: ${g.code}`),
+      m('div', ['red', 'blue', 'judge'].map(p => {
         let button = null
         if (g.currentPlayer === p) {
-          button = m("button", {disabled: true}, "Selected")
+          button = m('button', {disabled: true}, 'Selected')
         } else if (g.players()[p] === 0 && g.currentPlayer === null) {
-          button = m("button", {
+          button = m('button', {
             disabled: vnode.state.loading,
             onclick: () => {
               vnode.state.loading = true
@@ -33,16 +33,16 @@ export default {
                 m.redraw()
               })
             }
-          }, "Select")
+          }, 'Select')
         } else if (g.players()[p] === 0) {
-          button = " waiting for somebody to join..."
+          button = ' waiting for somebody to join...'
         }
-        return m("p", [
+        return m('p', [
           p,
           button
         ])
       })),
       leaveGameButton
     ])
-  },
+  }
 }

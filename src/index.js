@@ -17,13 +17,13 @@ const Page = {
     if (vnode.state.game === null) {
       return m(GameSelectionPage, {setGame})
     } else if (vnode.state.game.isLoading()) {
-      return m("div", "Loading game...")
+      return m('div', 'Loading game...')
     } else if (!vnode.state.game.gamePlaying()) {
       return m(PlayerSelectionPage, {game: vnode.state.game, setGame})
     } else {
       return m(GamePlayPage, {game: vnode.state.game, setGame})
     }
-  },
+  }
 }
 
 m.mount(document.getElementById('page'), Page)
