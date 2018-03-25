@@ -147,7 +147,7 @@ export class Game {
 
   sketches (player) {
     if (this.state && this.state.sketches && this.state.sketches[player]) {
-      return Object.values(this.state.sketches[player])
+      return this.state.sketches[player]
     }
     return []
   }

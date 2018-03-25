@@ -16,10 +16,16 @@ function updateCanvas (vnode) {
   canvas.isDrawingMode = canEdit && vnode.state.tool === 'sketch'
   canvas.freeDrawingBrush.color = vnode.attrs.game.currentPlayer === 'red' ? COLORS.RED : COLORS.BLUE
   canvas.freeDrawingBrush.width = 10
+  canvas.hoverCursor = 'default'
+  if (canEdit && tool !== 'erase') {
+    canvas.hoverCursor = 'crosshair'
+  }
   function sketchHandler (color) {
-    return (sketch) => {
+    return ([player, sketchId, sketch]) => {
       let sketchData = JSON.parse(sketch)
       var path = new fabric.Path(sketchData.path)
+      path.firebaseId = sketchId
+      path.playerName = player
       path.set({
         strokeWidth: 10,
         stroke: color,
@@ -27,16 +33,21 @@ function updateCanvas (vnode) {
         fill: 'transparent',
         top: sketchData.top,
         left: sketchData.left,
+        hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null,
         selectable: false})
       canvas.add(path)
     }
   }
+  function getSketches(player) {
+    let sketches = game.sketches(player)
+    return Object.keys(sketches).map(k => [player, k, sketches[k]])
+  }
   if (vnode.state.viewingPlayer === 'red') {
-    game.sketches('blue').forEach(sketchHandler(COLORS.BLUE_FADED))
-    game.sketches('red').forEach(sketchHandler(COLORS.RED))
+    getSketches('blue').forEach(sketchHandler(COLORS.BLUE_FADED))
+    getSketches('red').forEach(sketchHandler(COLORS.RED))
   } else {
-    game.sketches('red').forEach(sketchHandler(COLORS.RED_FADED))
-    game.sketches('blue').forEach(sketchHandler(COLORS.BLUE))
+    getSketches('red').forEach(sketchHandler(COLORS.RED_FADED))
+    getSketches('blue').forEach(sketchHandler(COLORS.BLUE))
   }
 }
 
@@ -51,6 +62,12 @@ export default {
       let pathString = path.toJSON().path.map(p => p.join(' ')).join(' ')
       vnode.attrs.game.addSketch(JSON.stringify({path: pathString, left: path.left, top: path.top}))
       m.redraw()
+    })
+    vnode.state.canvas.on('mouse:down', ({e, target}) => {
+      if (target && target.playerName && target.playerName === vnode.attrs.game.currentPlayer && vnode.state.tool === 'erase') {
+        vnode.attrs.game.removeSketch(target.firebaseId)
+        m.redraw()
+      }
     })
     updateCanvas(vnode)
   },
