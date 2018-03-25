@@ -137,6 +137,10 @@ export default {
         button('tool', 'pixel', 'Pixel Reveal Tool'),
         button('tool', 'erase', 'Eraser'),
       ])
+    } else if (vnode.attrs.game.currentPlayer === 'judge') {
+      toolbar = m('div', [
+        button('revealImage', true, 'End Game / Reveal Image')
+      ])
     }
 
     return m('div', [
