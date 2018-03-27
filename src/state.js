@@ -17,10 +17,16 @@ function getImage (url) {
 
 function resizedImage (url) {
   let dest = document.createElement("canvas")
-  dest.width = 500
-  dest.height = 500
   return getImage(url)
     .then(image => {
+      if (image.width > image.height) {
+        dest.width = 500
+        dest.height = 500/image.width*image.height
+      } else {
+        dest.height = 500
+        dest.width = 500/image.height*image.width
+      }
+      console.log(`canvas:`, dest.width, dest.height)
       return pica.resize(image, dest)
     })
     .then(() => {

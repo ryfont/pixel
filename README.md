@@ -14,6 +14,7 @@ Single pixel debate game
 
 ## TODO
 
+- [ ] don't freeze on empty codes
 - [ ] eraser processes click events on invisible fill
   - [ ] would be nice to indicate somehow what element is going to be deleted
 - [ ] indicate firebase connection status to user:

@@ -106,6 +106,8 @@ export default {
     vnode.state.img = null
     vnode.attrs.game.image().then(imgCanvas => {
       vnode.state.imgCanvas = imgCanvas
+      vnode.state.canvas.setHeight(imgCanvas.height)
+      vnode.state.canvas.setWidth(imgCanvas.width)
       fabric.Image.fromURL(imgCanvas.toDataURL(), function(imgObj) {
         vnode.state.img = imgObj
         vnode.state.img.selectable = false
@@ -145,7 +147,7 @@ export default {
 
     return m('div', [
       playerbar,
-      m('canvas#play', {width: 500, height: 500, style: 'border: 1px solid #ccc'}),
+      m('canvas#play', {style: 'border: 1px solid #ccc'}),
       toolbar,
     ])
   }
