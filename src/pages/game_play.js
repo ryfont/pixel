@@ -10,7 +10,38 @@ const COLORS = {
   BLUE_FADED: 'rgba(49, 135, 211, 0.2)'
 }
 
-const PIXEL_WIDTH = 20
+const PIXEL_WIDTH = 19
+
+function updateLoupe (vnode, pos) {
+  if (vnode.state.tool !== 'pixel') {
+    return
+  }
+  if (pos === undefined) {
+    pos = vnode.state.mousePos
+  }
+
+  vnode.state.mousePos = pos
+  let loupe = document.getElementById('loupe')
+  if (pos === null) {
+    loupe.style.display = 'none'
+  } else {
+    loupe.style.display = 'block'
+    loupe.style.position = 'absolute'
+    loupe.style.left = `${pos.x - (PIXEL_WIDTH*.5) + 0.5}px`
+    loupe.style.top = `${pos.y + PIXEL_WIDTH}px`
+    loupe.style.backgroundColor = pixelColor(vnode, pos)
+    loupe.style.width = `${PIXEL_WIDTH-2}px`
+    loupe.style.height = `${PIXEL_WIDTH-2}px`
+    loupe.style.pointerEvents = 'none'
+    loupe.style.border = '2px solid #888'
+    loupe.style.borderRadius = '3px'
+  }
+}
+
+function pixelColor (vnode, pos) {
+  let pixelData = vnode.state.imgCanvas.getContext('2d').getImageData(pos.x, pos.y, 1, 1).data
+  return `rgba(${pixelData.join(',')})`
+}
 
 function updateCanvas (vnode) {
   let {canvas, tool, img} = vnode.state
@@ -60,11 +91,10 @@ function updateCanvas (vnode) {
   function pixelHandler (color) {
     return ({x,y}) => {
       if (vnode.state.imgCanvas) {
-        let pixelData = vnode.state.imgCanvas.getContext('2d').getImageData(x, y, 1, 1).data
         let rect = new fabric.Rect({
-          left: x - PIXEL_WIDTH/2,
-          top: y - PIXEL_WIDTH/2,
-          fill: `rgba(${pixelData.join(',')})`,
+          left: x - PIXEL_WIDTH/2 + 0.5,
+          top: y - PIXEL_WIDTH/2 + 0.5,
+          fill: pixelColor(vnode, {x,y}),
           width: PIXEL_WIDTH,
           height: PIXEL_WIDTH,
           stroke: color,
@@ -79,6 +109,7 @@ function updateCanvas (vnode) {
   }
   game.pixels('red').forEach(pixelHandler(COLORS.RED_FULL))
   game.pixels('blue').forEach(pixelHandler(COLORS.BLUE_FULL))
+  updateLoupe(vnode)
 }
 
 export default {
@@ -86,6 +117,7 @@ export default {
     vnode.state.tool = 'sketch' // either 'sketch', 'pixel', 'erase'
     vnode.state.viewingPlayer = vnode.attrs.game.currentPlayer === 'blue' ? 'blue' : 'red'
     vnode.state.revealImage = false
+    vnode.state.mousePos = null
   },
   oncreate: (vnode) => {
     vnode.state.canvas = new fabric.Canvas('play')
@@ -103,6 +135,13 @@ export default {
         let {x, y} = vnode.state.canvas.getPointer(e)
         vnode.attrs.game.addPixel(x, y)
       }
+    })
+    vnode.state.canvas.on('mouse:move', ({e}) => {
+      let {x, y} = vnode.state.canvas.getPointer(e)
+      updateLoupe(vnode, {x, y})
+    })
+    vnode.state.canvas.on('mouse:out', ({e}) => {
+      updateLoupe(vnode, null)
     })
     vnode.state.img = null
     vnode.attrs.game.image().then(imgCanvas => {
@@ -148,7 +187,10 @@ export default {
 
     return m('div', [
       playerbar,
-      m('canvas#play', {style: 'border: 1px solid #ccc'}),
+      m('div', {style: 'position: relative;'}, [
+        m('canvas#play', {style: 'border: 1px solid #ccc'}),
+        vnode.state.tool === 'pixel' ? m('div#loupe') : null
+      ]),
       toolbar,
     ])
   }
