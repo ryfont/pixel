@@ -38,7 +38,7 @@ function updateCanvas (vnode) {
         strokeWidth: 10,
         stroke: color,
         strokeLineCap: 'round',
-        fill: 'transparent',
+        fill: '',
         top: sketchData.top,
         left: sketchData.left,
         hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null,
@@ -69,6 +69,7 @@ function updateCanvas (vnode) {
           height: PIXEL_WIDTH,
           stroke: color,
           strokeWidth: 2,
+          selectable: false,
           rx: 3,
           ry: 3
         })
