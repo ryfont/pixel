@@ -47,9 +47,9 @@ function updateCanvas (vnode) {
   let {canvas, tool, img} = vnode.state
   let game = vnode.attrs.game
   canvas.clear()
-  let canEdit = vnode.attrs.game.currentPlayer === vnode.state.viewingPlayer
+  let canEdit = vnode.attrs.role === vnode.state.viewingPlayer
   canvas.isDrawingMode = canEdit && vnode.state.tool === 'sketch'
-  canvas.freeDrawingBrush.color = vnode.attrs.game.currentPlayer === 'red' ? COLORS.RED_FULL : COLORS.BLUE_FULL
+  canvas.freeDrawingBrush.color = vnode.attrs.role === 'red' ? COLORS.RED_FULL : COLORS.BLUE_FULL
   canvas.freeDrawingBrush.width = 10
   canvas.hoverCursor = 'default'
   canvas.selection = false
@@ -115,19 +115,21 @@ function updateCanvas (vnode) {
 export default {
   oninit: (vnode) => {
     vnode.state.tool = 'sketch' // either 'sketch', 'pixel', 'erase'
-    vnode.state.viewingPlayer = vnode.attrs.game.currentPlayer === 'blue' ? 'blue' : 'red'
+    vnode.state.viewingPlayer = vnode.attrs.role === 'blue' ? 'blue' : 'red'
     vnode.state.revealImage = false
     vnode.state.mousePos = null
   },
   oncreate: (vnode) => {
     vnode.state.canvas = new fabric.Canvas('play')
+    vnode.state.canvas.setHeight(500)
+    vnode.state.canvas.setWidth(500)
     vnode.state.canvas.on('path:created', ({path}) => {
       let pathString = path.toJSON().path.map(p => p.join(' ')).join(' ')
       vnode.attrs.game.addSketch(JSON.stringify({path: pathString, left: path.left, top: path.top}))
       m.redraw()
     })
     vnode.state.canvas.on('mouse:down', ({e, target}) => {
-      if (target && target.playerName && target.playerName === vnode.attrs.game.currentPlayer && vnode.state.tool === 'erase') {
+      if (target && target.playerName && target.playerName === vnode.attrs.role && vnode.state.tool === 'erase') {
         vnode.attrs.game.removeSketch(target.firebaseId)
         m.redraw()
       }
@@ -144,45 +146,62 @@ export default {
       updateLoupe(vnode, null)
     })
     vnode.state.img = null
-    vnode.attrs.game.image().then(imgCanvas => {
-      vnode.state.imgCanvas = imgCanvas
-      vnode.state.canvas.setHeight(imgCanvas.height)
-      vnode.state.canvas.setWidth(imgCanvas.width)
-      fabric.Image.fromURL(imgCanvas.toDataURL(), function(imgObj) {
-        vnode.state.img = imgObj
-        vnode.state.img.selectable = false
-        m.redraw()
+    if (vnode.attrs.game.hasImage()) {
+      vnode.attrs.game.image().then(imgCanvas => {
+        vnode.state.imgCanvas = imgCanvas
+        vnode.state.canvas.setHeight(imgCanvas.height)
+        vnode.state.canvas.setWidth(imgCanvas.width)
+        fabric.Image.fromURL(imgCanvas.toDataURL(), function(imgObj) {
+          vnode.state.img = imgObj
+          vnode.state.img.selectable = false
+          m.redraw()
+        })
       })
-    })
+    }
     updateCanvas(vnode)
   },
   onupdate: (vnode) => {
     updateCanvas(vnode)
   },
   view: (vnode) => {
-    const button = (type, name, label) => {
+    const stateButton = (type, name, label, disable=false) => {
       return m('button', {
-        disabled: vnode.state[type] === name,
+        disabled: vnode.state[type] === name || disable,
         onclick: () => {vnode.state[type] = name}
       }, label)
     }
 
     let playerbar = m('div', [
-      button('viewingPlayer', 'red', vnode.attrs.game.currentPlayer === 'red' ? 'Your Drawing' : "Red's Drawing"),
-      button('viewingPlayer', 'blue', vnode.attrs.game.currentPlayer === 'blue' ? 'Your Drawing' : "Blue's Drawing"),
+      stateButton('viewingPlayer', 'red', vnode.attrs.role === 'red' ? 'Your Drawing' : "Red's Drawing"),
+      stateButton('viewingPlayer', 'blue', vnode.attrs.role === 'blue' ? 'Your Drawing' : "Blue's Drawing"),
     ])
 
-    let toolbar = null
-    if (vnode.attrs.game.currentPlayer === vnode.state.viewingPlayer) {
-      toolbar = m('div', [
-        button('tool', 'sketch', 'Sketch Tool'),
-        button('tool', 'pixel', 'Pixel Reveal Tool'),
-        button('tool', 'erase', 'Eraser'),
-      ])
-    } else if (vnode.attrs.game.currentPlayer === 'judge') {
-      toolbar = m('div', [
-        button('revealImage', true, 'End Game / Reveal Image')
-      ])
+    let toolbar = []
+    if (vnode.attrs.role === 'judge') {
+      if (vnode.attrs.game.isFull()) {
+        toolbar.push(m('button', {disabled: true}, 'Already have 2 debaters'))
+      } else {
+        toolbar.push(m('button', {onclick: () => {
+          vnode.attrs.game.becomeDebater().then(color => {
+            if (color) {
+              m.route.set('/game/:code/:role', {code: vnode.attrs.game.code, role: color}, {replace: true})
+              vnode.state.viewingPlayer = color
+            }
+          })
+        }}, 'Become Debater'))
+      }
+      toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
+    } else {
+      toolbar.push(
+        stateButton('tool', 'sketch', 'Sketch Tool'),
+      )
+      if (vnode.attrs.role === vnode.state.viewingPlayer) {
+        toolbar = toolbar.concat([
+          stateButton('tool', 'sketch', 'Sketch Tool'),
+          stateButton('tool', 'pixel', 'Pixel Reveal Tool'),
+          stateButton('tool', 'erase', 'Eraser'),
+        ])
+      }
     }
 
     return m('div', [
@@ -191,7 +210,7 @@ export default {
         m('canvas#play', {style: 'border: 1px solid #ccc'}),
         vnode.state.tool === 'pixel' ? m('div#loupe') : null
       ]),
-      toolbar,
+      m('div', toolbar),
     ])
   }
 }

@@ -72,6 +72,16 @@ export function gameExists (checkId) {
     .then(snap => !!(snap.val()))
 }
 
+function setNewGame (ref) {
+  ref.set({
+    sketches: {red: {}, blue: {}},
+    rectangles: {red: {}, blue: {}},
+    image: '',
+    pixels: {red: {}, blue: {}},
+    players: {blue: 0, judge: 0, red: 0}
+  })
+}
+
 // generates new game code and creates new game for it, and returns a promise containing the new game object
 export function freshNewGame () {
   function genId (resolve) {
@@ -89,13 +99,7 @@ export function freshNewGame () {
       .once('value')
       .then(snap => {
         if (snap.val() === null) {
-          gameState.set({
-            sketches: {red: {}, blue: {}},
-            rectangles: {red: {}, blue: {}},
-            image: '',
-            pixels: {red: {}, blue: {}},
-            players: {blue: 0, judge: 0, red: 0}
-          })
+          setNewGame(gameState)
           resolve(newId)
         } else {
           console.warn('GAME ALREADY EXISTS:', snap.val())
@@ -106,17 +110,15 @@ export function freshNewGame () {
 
   return new Promise(function (resolve, reject) {
     genId(resolve)
-  }).then((newId) => {
-    return new Game(newId)
   })
 }
 
 export class Game {
-  constructor (gameId) {
+  constructor (gameId, role) {
     this.onUpdates = []
     this.state = null
     this.code = gameId
-    this.currentPlayer = null // role of this player, either 'red' 'blue' 'judge' or null
+    this.currentPlayer = role // role of this player, either 'red' 'blue' 'judge'
     this.dbref = app.database().ref(`games/${gameId}`)
     this.dbref.on('value', snap => {
       this.state = snap.val()
@@ -198,7 +200,14 @@ export class Game {
     return ""
   }
 
+  hasImage () {
+    return this.imageUrl() !== ""
+  }
+
   image () {
+    if (this.imageUrl() === "") {
+      return null
+    }
     return resizedImage(this.imageUrl())
   }
 
@@ -241,36 +250,39 @@ export class Game {
     return this.state.players
   }
 
-  // returns string of game state
-  currentState () {
-    if (this.state === null) {
-      return 'loading'
-    }
-    if (this.state.players.red !== 1 ||
-      this.state.players.blue !== 1 ||
-      this.state.players.judge !== 1) {
-      return 'player_selection'
-    }
-    if (this.currentPlayer === null) {
-      return 'full'
-    }
-    if (this.imageUrl() === "") {
-      return 'image_selection'
-    }
-    return 'playing'
+  isLoading () {
+    return this.state === null
   }
 
-  setCurrentPlayer (player) {
-    if (['red', 'blue', 'judge'].indexOf(player) === -1) {
-      throw 'Invalid player type'
-    }
-    // TODO update database to reject new edits of player
+  isFull () {
+    return this.state.players.red === 1 && this.state.players.blue === 1
+  }
+
+  becomeDebater () {
+    let myColor = null
     return this.dbref
-      .child('players').child(player)
-      .set(1)
+      .child('players')
+      .transaction((players) => {
+        if (players && players.red === 0) {
+          myColor = 'red'
+          players.red = 1
+        } else if (players && players.red === 1 & players.blue === 0) {
+          myColor = 'blue'
+          players.blue = 1
+        } else {
+          myColor = null
+        }
+        return players
+      })
       .then(() => {
-        // successfully set player
-        this.currentPlayer = player
+        if (myColor) {
+          this.currentPlayer = myColor
+        }
+        return myColor
+      })
+      .catch((e) => {
+        console.error(e)
+        return null
       })
   }
 

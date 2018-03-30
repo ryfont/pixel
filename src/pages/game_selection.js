@@ -1,5 +1,5 @@
 import m from 'mithril'
-import {freshNewGame, Game, gameExists} from '../state'
+import {freshNewGame, gameExists} from '../state'
 
 export default {
   oninit: (vnode) => {
@@ -13,7 +13,9 @@ export default {
         disabled: vnode.state.loading,
         onclick: () => {
           vnode.state.loading = true
-          freshNewGame().then(vnode.attrs.setGame).then(m.redraw)
+          freshNewGame().then((code) => {
+            m.route.set('/game/:code/judge', {code: code})
+          })
         }
       }, 'Create New Game'),
       m('form', [
@@ -33,7 +35,7 @@ export default {
             vnode.state.loading = true
             gameExists(vnode.state.gameIdText).then(exists => {
               if (exists) {
-                vnode.attrs.setGame(new Game(vnode.state.gameIdText))
+                m.route.set('/game/:code/judge', {code: vnode.state.gameIdText})
               } else {
                 vnode.state.loading = false
                 vnode.state.error = `Don't know of a game with code '${vnode.state.gameIdText}'`
