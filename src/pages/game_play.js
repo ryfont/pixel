@@ -192,9 +192,6 @@ export default {
       }
       toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     } else {
-      toolbar.push(
-        stateButton('tool', 'sketch', 'Sketch Tool'),
-      )
       if (vnode.attrs.role === vnode.state.viewingPlayer) {
         toolbar = toolbar.concat([
           stateButton('tool', 'sketch', 'Sketch Tool'),
@@ -203,8 +200,17 @@ export default {
         ])
       }
     }
+    toolbar.push(m('button', {onclick: () => {
+      vnode.attrs.game.becomeDebater().then(color => {
+        if (color) {
+          m.route.set('/game/:code/:role', {code: vnode.attrs.game.code, role: color}, {replace: true})
+          vnode.state.viewingPlayer = color
+        }
+      })
+    }}, 'Reset Board + Roles'))
 
     return m('div', [
+      m('div', `You are ${vnode.attrs.role}. Your game code is ${vnode.attrs.game.code}`),
       playerbar,
       m('div', {style: 'position: relative;'}, [
         m('canvas#play', {style: 'border: 1px solid #ccc'}),
