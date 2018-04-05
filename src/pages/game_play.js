@@ -105,8 +105,8 @@ function updateCanvas (vnode) {
         height: h,
         stroke: color,
         strokeWidth: 2,
-        selectable: false,
-        hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null
+        selectable: false
+        // hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null
       })
       rect.firebaseId = id
       rect.playerName = player
@@ -184,10 +184,6 @@ export default {
       m.redraw()
     })
     vnode.state.canvas.on('mouse:up', ({e, target}) => {
-      if (target && target.playerName && target.playerName === vnode.attrs.game.role && vnode.state.tool === 'erase') {
-        vnode.attrs.game.removeRectangle(target.firebaseId)
-        m.redraw()
-      }
       let {x, y} = vnode.state.canvas.getPointer(e)
       if (vnode.state.tool === 'pixel') {
         vnode.attrs.game.addPixel(x, y)
@@ -251,6 +247,10 @@ export default {
     toolbar.push(m('button', {onclick: () => {
       vnode.attrs.game.reset()
     }}, 'Reset Board + Roles'))
+    if (vnode.state.currentRect) {
+      let {x1,y1,x2,y2} = vnode.state.currentRect
+      toolbar.push(m('span', `x1: ${Math.round(x1)} y1: ${Math.round(y1)}, x2: ${Math.round(x2)}, y2: ${Math.round(y2)}`))
+    }
 
     return m('div', [
       m(ImageSelector, {game: vnode.attrs.game}),
