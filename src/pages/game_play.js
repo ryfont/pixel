@@ -46,11 +46,13 @@ function updateImage (vnode) {
       let thisImageUrl = vnode.attrs.game.imageUrl()
       vnode.attrs.game.image().then(imgCanvas => {
         fabric.Image.fromURL(imgCanvas.toDataURL(), function(imgObj) {
+          imgObj.selectable = false
           if (vnode.state.lastImageUrl === thisImageUrl) { // ensure it hasn't been changed again in the meantime
             vnode.state.imgCanvas = imgCanvas
             vnode.state.canvas.setHeight(imgCanvas.height)
             vnode.state.canvas.setWidth(imgCanvas.width)
             vnode.state.img = imgObj
+            vnode.state.img.selectable
             m.redraw()
           }
         })
@@ -75,6 +77,7 @@ function updateCanvas (vnode) {
   canvas.clear()
   let canEdit = vnode.attrs.role === vnode.state.viewingPlayer
   canvas.hoverCursor = 'default'
+  canvas.selection = false
   if (canEdit && tool !== 'erase') {
     canvas.hoverCursor = 'crosshair'
   }
@@ -121,7 +124,8 @@ function updateCanvas (vnode) {
           stroke: color,
           strokeWidth: 2,
           rx: 3,
-          ry: 3
+          ry: 3,
+          selectable: false
         })
         canvas.add(rect)
       }
@@ -144,7 +148,7 @@ export default {
     vnode.state.imgCanvas = null
   },
   oncreate: (vnode) => {
-    vnode.state.canvas = new fabric.StaticCanvas('play')
+    vnode.state.canvas = new fabric.Canvas('play')
     vnode.state.canvas.setHeight(500)
     vnode.state.canvas.setWidth(500)
     vnode.state.canvas.on('mouse:down', ({e, target}) => {
