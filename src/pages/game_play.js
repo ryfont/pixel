@@ -96,21 +96,34 @@ function updateCanvas (vnode) {
     canvas.add(img)
   }
   function drawRects (player, color) {
-    function drawRect (x, y, w, h, id) {
+    function drawFilledRect (x, y, w, h, id, fillColor) {
       let rect = new fabric.Rect({
         left: x,
         top: y,
-        fill: '',
+        fill: fillColor,
         width: w,
         height: h,
-        stroke: color,
-        strokeWidth: 2,
-        selectable: false
-        // hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null
+        strokeWidth: 0,
+        selectable: false,
+        hoverCursor: (canEdit && tool === 'erase' && player === game.role) ? 'pointer' : null
       })
       rect.firebaseId = id
       rect.playerName = player
       canvas.add(rect)
+    }
+    // we draw each edge as its own rect because fabric.js's click detection system
+    // can't ignore the center of a rectangle, and we only want to register clicks
+    // for erasing if somebody clicks the border of the rectangle
+    function drawRect (x, y, w, h, id) {
+      drawFilledRect(x, y, 1, h, id, color)
+      drawFilledRect(x+1, y, w, 1, id, color)
+      drawFilledRect(x+w, y+1, 1, h, id, color)
+      drawFilledRect(x, y+h, w, 1, id, color)
+      // wider bounding box to make rects easier to click
+      drawFilledRect(x-4, y-4, 8, h, id, 'transparent')
+      drawFilledRect(x-4, y-4, w, 8, id, 'transparent')
+      drawFilledRect(x+w-4, y-4, 8, h, id, 'transparent')
+      drawFilledRect(x-4, y+h-4, w+8, 8, id, 'transparent')
     }
     let rectangles = game.rectangles(player)
     Object.keys(rectangles).forEach(rectId => {
