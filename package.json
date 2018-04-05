@@ -6,6 +6,7 @@
     "fabric": "^2.2.2",
     "firebase": "^4.11.0",
     "firebase-tools": "^3.17.7",
+    "js-md5": "^0.7.3",
     "mithril": "^1.1.6",
     "pica": "^4.0.2",
     "standard": "^11.0.1",

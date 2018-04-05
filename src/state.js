@@ -1,6 +1,7 @@
 import firebase from 'firebase/app'
 import {} from 'firebase/database'
 import config from '../config'
+import md5 from 'js-md5'
 const pica = require('pica/dist/pica')()
 
 const app = firebase.initializeApp(config)
@@ -165,19 +166,10 @@ export class Game {
     return index
   }
 
-  // 'hash' game code and state num to get who is the liar and who selects the image
-  // hashing algorithm inspired by https://stackoverflow.com/a/19303725
+  // hash game code and state num to get who is the liar and who selects the image
   _redIsLiar () {
-    let num = 0
-    this.code.split("").forEach((char) => {
-      num += char.charCodeAt()
-    })
-    let gameNum = 0
-    if (this.state) {
-      gameNum = this.state.gameNum
-    }
-    let rand = Math.sin(num+gameNum) * 10000
-    return (rand - Math.floor(rand)) >= 0.5
+    let firstChar = md5(`${this.code} ${this.state?this.state.gameNum:'0'}`)[0]
+    return ['0', '1', '2', '3', '4', '5', '6', '7', '8'].indexOf(firstChar) === -1
   }
 
   isImageSelector () {
