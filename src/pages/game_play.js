@@ -13,6 +13,16 @@ const COLORS = {
 
 const PIXEL_WIDTH = 19
 
+function normalizeRect(currentRect) {
+  let {x1,x2,y1,y2} = currentRect
+  return {
+    x: Math.round(Math.min(x1, x2)),
+    y: Math.round(Math.min(y1, y2)),
+    w: Math.round(Math.abs(x1-x2)),
+    h: Math.round(Math.abs(y1-y2))
+  }
+}
+
 function updateLoupe (vnode, pos) {
   if (vnode.state.tool !== 'pixel') {
     return
@@ -86,25 +96,31 @@ function updateCanvas (vnode) {
     canvas.add(img)
   }
   function drawRects (player, color) {
-    let rectangles = game.rectangles(player)
-    Object.keys(rectangles).forEach(rectId => {
-      let rectData = rectangles[rectId]
+    function drawRect (x, y, w, h, id) {
       let rect = new fabric.Rect({
-        left: rectData.x,
-        top: rectData.y,
+        left: x,
+        top: y,
         fill: '',
-        width: rectData.w,
-        height: rectData.h,
+        width: w,
+        height: h,
         stroke: color,
-        strokeWidth: 1,
+        strokeWidth: 2,
         selectable: false,
         hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null
       })
-      rect.firebaseId = rectId
+      rect.firebaseId = id
       rect.playerName = player
-      console.log('drawing rect:', rectData.x)
       canvas.add(rect)
+    }
+    let rectangles = game.rectangles(player)
+    Object.keys(rectangles).forEach(rectId => {
+      let {x,y,w,h} = rectangles[rectId]
+      drawRect(x,y,w,h,rectId)
     })
+    if (vnode.state.currentRect) {
+      let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
+      drawRect(x,y,w,h,-1)
+    }
   }
   if (vnode.state.viewingPlayer === 'red') {
     drawRects('blue', COLORS.BLUE_FADED)
@@ -173,8 +189,8 @@ export default {
       if (vnode.state.tool === 'pixel') {
         vnode.attrs.game.addPixel(x, y)
       } else if (vnode.state.tool === 'rect' && vnode.state.currentRect !== null) {
-        let {x1,x2,y1,y2} = vnode.state.currentRect
-        vnode.attrs.game.addRectangle(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1-x2), Math.abs(y1-y2))
+        let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
+        vnode.attrs.game.addRectangle(x,y,w,h)
         vnode.state.currentRect = null
         m.redraw()
       }
@@ -187,11 +203,6 @@ export default {
         vnode.state.currentRect.y2 = y
         m.redraw()
       }
-    })
-    vnode.state.canvas.on('mouse:out', ({e}) => {
-      updateLoupe(vnode, null)
-      vnode.state.currentRect = null
-      m.redraw()
     })
     updateCanvas(vnode)
   },
