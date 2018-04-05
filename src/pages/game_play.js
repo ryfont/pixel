@@ -72,6 +72,7 @@ function pixelColor (vnode, pos) {
 }
 
 function updateCanvas (vnode) {
+  updateImage(vnode)
   let {canvas, tool, img} = vnode.state
   let game = vnode.attrs.game
   canvas.clear()
@@ -84,34 +85,34 @@ function updateCanvas (vnode) {
   if (img && (vnode.attrs.role !== 'judge' || vnode.state.revealImage)) {
     canvas.add(img)
   }
-  // function sketchHandler (color) {
-  //   return ([player, sketchId, sketch]) => {
-  //     let sketchData = JSON.parse(sketch)
-  //     var path = new fabric.Path(sketchData.path)
-  //     path.firebaseId = sketchId
-  //     path.playerName = player
-  //     path.set({
-  //       strokeWidth: 10,
-  //       stroke: color,
-  //       strokeLineCap: 'round',
-  //       fill: '',
-  //       top: sketchData.top,
-  //       left: sketchData.left,
-  //       hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null})
-  //     canvas.add(path)
-  //   }
-  // }
-  // function getSketches(player) {
-  //   let sketches = game.sketches(player)
-  //   return Object.keys(sketches).map(k => [player, k, sketches[k]])
-  // }
-  // if (vnode.state.viewingPlayer === 'red') {
-  //   getSketches('blue').forEach(sketchHandler(COLORS.BLUE_FADED))
-  //   getSketches('red').forEach(sketchHandler(COLORS.RED))
-  // } else {
-  //   getSketches('red').forEach(sketchHandler(COLORS.RED_FADED))
-  //   getSketches('blue').forEach(sketchHandler(COLORS.BLUE))
-  // }
+  function drawRects (player, color) {
+    let rectangles = game.rectangles(player)
+    Object.keys(rectangles).forEach(rectId => {
+      let rectData = rectangles[rectId]
+      let rect = new fabric.Rect({
+        left: rectData.x,
+        top: rectData.y,
+        fill: '',
+        width: rectData.w,
+        height: rectData.h,
+        stroke: color,
+        strokeWidth: 1,
+        selectable: false,
+        hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null
+      })
+      rect.firebaseId = rectId
+      rect.playerName = player
+      console.log('drawing rect:', rectData.x)
+      canvas.add(rect)
+    })
+  }
+  if (vnode.state.viewingPlayer === 'red') {
+    drawRects('blue', COLORS.BLUE_FADED)
+    drawRects('red', COLORS.RED)
+  } else {
+    drawRects('red', COLORS.RED_FADED)
+    drawRects('blue', COLORS.BLUE)
+  }
   function pixelHandler (color) {
     return ({x,y}) => {
       if (vnode.state.imgCanvas) {
@@ -134,7 +135,6 @@ function updateCanvas (vnode) {
   game.pixels('red').forEach(pixelHandler(COLORS.RED_FULL))
   game.pixels('blue').forEach(pixelHandler(COLORS.BLUE_FULL))
   updateLoupe(vnode)
-  updateImage(vnode)
 }
 
 export default {
@@ -146,27 +146,52 @@ export default {
     vnode.state.lastImageUrl = ""
     vnode.state.img = null
     vnode.state.imgCanvas = null
+    vnode.state.currentRect = null
+    vnode.state.rectEnd = null
   },
   oncreate: (vnode) => {
     vnode.state.canvas = new fabric.Canvas('play')
     vnode.state.canvas.setHeight(500)
     vnode.state.canvas.setWidth(500)
     vnode.state.canvas.on('mouse:down', ({e, target}) => {
+      let {x, y} = vnode.state.canvas.getPointer(e)
+      if (target && target.playerName && target.playerName === vnode.attrs.role && vnode.state.tool === 'erase') {
+        vnode.attrs.game.removeRectangle(target.firebaseId)
+      } else if (vnode.state.tool === 'pixel') {
+        vnode.attrs.game.addPixel(x, y)
+      } else if (vnode.state.tool === 'rect') {
+        vnode.state.currentRect = {x1: x, y1: y, x2: x, y2: y}
+      }
+      m.redraw()
+    })
+    vnode.state.canvas.on('mouse:up', ({e, target}) => {
       if (target && target.playerName && target.playerName === vnode.attrs.role && vnode.state.tool === 'erase') {
         vnode.attrs.game.removeRectangle(target.firebaseId)
         m.redraw()
       }
+      let {x, y} = vnode.state.canvas.getPointer(e)
       if (vnode.state.tool === 'pixel') {
-        let {x, y} = vnode.state.canvas.getPointer(e)
         vnode.attrs.game.addPixel(x, y)
+      } else if (vnode.state.tool === 'rect' && vnode.state.currentRect !== null) {
+        let {x1,x2,y1,y2} = vnode.state.currentRect
+        vnode.attrs.game.addRectangle(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1-x2), Math.abs(y1-y2))
+        vnode.state.currentRect = null
+        m.redraw()
       }
     })
     vnode.state.canvas.on('mouse:move', ({e}) => {
       let {x, y} = vnode.state.canvas.getPointer(e)
       updateLoupe(vnode, {x, y})
+      if (vnode.state.currentRect) {
+        vnode.state.currentRect.x2 = x
+        vnode.state.currentRect.y2 = y
+        m.redraw()
+      }
     })
     vnode.state.canvas.on('mouse:out', ({e}) => {
       updateLoupe(vnode, null)
+      vnode.state.currentRect = null
+      m.redraw()
     })
     updateCanvas(vnode)
   },

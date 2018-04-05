@@ -38,8 +38,8 @@ function resizedImage (url) {
 function parsePixel (s) {
   let nums = s.match(/(\d+),(\d+)/)
   let res = {
-    x: nums[1],
-    y: nums[2]
+    x: parseInt(nums[1]),
+    y: parseInt(nums[2])
   }
   return res
 }
@@ -218,12 +218,15 @@ export class Game {
 
   rectangles (player) {
     if (this.state && this.state.rectangles && this.state.rectangles[player]) {
-      return Object.values(this.state.rectangles[player]).map(str => {
-        let res = parseMultiplePixels(str)
-        return {x: res[0].x, y: res[0].y, w: res[1].x, h: res[1].y}
+      let result = {}
+      let rects = this.state.rectangles[player]
+      Object.keys(rects).forEach(rectId => {
+        let parsed = parseMultiplePixels(rects[rectId])
+        result[rectId] = {x: parsed[0].x, y: parsed[0].y, w: parsed[1].x, h: parsed[1].y}
       })
+      return result
     }
-    return []
+    return {}
   }
 
   addRectangle (x, y, w, h) {
