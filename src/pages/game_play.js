@@ -170,8 +170,11 @@ export default {
     vnode.state.canvas.setHeight(500)
     vnode.state.canvas.setWidth(500)
     vnode.state.canvas.on('mouse:down', ({e, target}) => {
+      if (vnode.attrs.game.role === 'judge') {
+        return
+      }
       let {x, y} = vnode.state.canvas.getPointer(e)
-      if (target && target.playerName && target.playerName === vnode.attrs.role && vnode.state.tool === 'erase') {
+      if (target && target.playerName && target.playerName === vnode.attrs.game.role && vnode.state.tool === 'erase') {
         vnode.attrs.game.removeRectangle(target.firebaseId)
       } else if (vnode.state.tool === 'pixel') {
         vnode.attrs.game.addPixel(x, y)
@@ -181,7 +184,7 @@ export default {
       m.redraw()
     })
     vnode.state.canvas.on('mouse:up', ({e, target}) => {
-      if (target && target.playerName && target.playerName === vnode.attrs.role && vnode.state.tool === 'erase') {
+      if (target && target.playerName && target.playerName === vnode.attrs.game.role && vnode.state.tool === 'erase') {
         vnode.attrs.game.removeRectangle(target.firebaseId)
         m.redraw()
       }
