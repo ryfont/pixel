@@ -72,14 +72,15 @@ export function gameExists (checkId) {
     .then(snap => !!(snap.val()))
 }
 
-function setNewGame (ref) {
-  ref.set({
+function gameTemplate (gameNum = 0) {
+  return {
     sketches: {red: {}, blue: {}},
     rectangles: {red: {}, blue: {}},
     image: '',
+    gameNum: gameNum,
     pixels: {red: {}, blue: {}},
     players: {blue: 0, judge: 0, red: 0}
-  })
+  }
 }
 
 // generates new game code and creates new game for it, and returns a promise containing the new game object
@@ -99,7 +100,7 @@ export function freshNewGame () {
       .once('value')
       .then(snap => {
         if (snap.val() === null) {
-          setNewGame(gameState)
+          gameState.set(gameTemplate())
           resolve(newId)
         } else {
           console.warn('GAME ALREADY EXISTS:', snap.val())
@@ -114,15 +115,23 @@ export function freshNewGame () {
 }
 
 export class Game {
-  constructor (gameId, role) {
+  constructor (gameId, role, setRole) {
     this.onUpdates = []
     this.state = null
     this.code = gameId
-    this.currentPlayer = role // role of this player, either 'red' 'blue' 'judge'
+    this.lastGameNum = 0
+    this.role = role // role of this player, either 'red' 'blue' 'judge'
+    this.setRole = setRole
     this.dbref = app.database().ref(`games/${gameId}`)
     this.dbref.on('value', snap => {
       this.state = snap.val()
       this.onUpdates.forEach(f => { f() })
+      if (['red', 'blue'].indexOf(this.role) >= 0 && this.lastGameNum !== this.state.gameNum) {
+        // game has been reset!
+        this.setRole('judge')
+        this.role = 'judge'
+      }
+      this.lastGameNum = this.state.gameNum
     })
   }
 
@@ -132,7 +141,7 @@ export class Game {
   }
 
   _checkCanDraw () {
-    if (!this.state || !this.state.players || ['red', 'blue'].indexOf(this.currentPlayer) === -1) {
+    if (!this.state || !this.state.players || ['red', 'blue'].indexOf(this.role) === -1) {
       throw 'Can only draw if current player is red or blue'
     }
   }
@@ -143,16 +152,16 @@ export class Game {
     // normally you'd want to use firebase's .push() here, but since only one unique writer for each object,
     // we can keep track of it locally
     let i = 0
-    if (this.state[drawingType] !== undefined && this.state[drawingType][this.currentPlayer] !== undefined) {
-      i = nextIndex(this.state[drawingType][this.currentPlayer])
+    if (this.state[drawingType] !== undefined && this.state[drawingType][this.role] !== undefined) {
+      i = nextIndex(this.state[drawingType][this.role])
     }
-    this.dbref.child(drawingType).child(this.currentPlayer).child(i).set(data)
+    this.dbref.child(drawingType).child(this.role).child(i).set(data)
     return i
   }
 
   _removeDrawing (drawingType, index) {
     this._checkCanDraw()
-    this.dbref.child(drawingType).child(this.currentPlayer).child(index).set(null)
+    this.dbref.child(drawingType).child(this.role).child(index).set(null)
     return index
   }
 
@@ -166,12 +175,12 @@ export class Game {
   }
 
   isImageSelector () {
-    return this.currentPlayer !== 'judge' && !this.isLiar()
+    return this.role !== 'judge' && !this.isLiar()
   }
 
   isLiar () {
     let redLies = this._redIsLiar()
-    return (redLies && this.currentPlayer === 'red') || (!redLies && this.currentPlayer === 'blue')
+    return (redLies && this.role === 'red') || (!redLies && this.role === 'blue')
   }
 
   pixels (player) {
@@ -258,6 +267,13 @@ export class Game {
     return this.state.players.red === 1 && this.state.players.blue === 1
   }
 
+  reset () {
+    return this.dbref
+      .transaction((oldGame) => {
+        return gameTemplate(oldGame.gameNum + 1)
+      })
+  }
+
   becomeDebater () {
     let myColor = null
     return this.dbref
@@ -276,7 +292,8 @@ export class Game {
       })
       .then(() => {
         if (myColor) {
-          this.currentPlayer = myColor
+          this.setRole(myColor)
+          this.role = myColor
         }
         return myColor
       })
@@ -287,14 +304,10 @@ export class Game {
   }
 
   leave () {
-    if (this.currentPlayer !== null) {
+    if (this.role !== null) {
       return this.dbref
-        .child('players').child(this.currentPlayer)
+        .child('players').child(this.role)
         .set(0)
-        .then(() => {
-          // successfully set player
-          this.currentPlayer = null
-        })
     }
   }
 }

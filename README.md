@@ -14,6 +14,13 @@ Single pixel debate game
 
 ## TODO
 
+- [x] updating image should update immediately, not on reload
+- [x] figure out solution for board resets, locking?
+- [ ] different liar each board reset
+- [ ] rectangles
+- [ ] better loupe, for both rectangle and pixel tool
+
+
 - [ ] don't freeze on empty codes
 - [ ] eraser processes click events on invisible fill
   - [ ] would be nice to indicate somehow what element is going to be deleted

@@ -10,10 +10,10 @@ export default {
     let g = vnode.attrs.game
     if (g.isImageSelector()) {
       return m('div', [
-        "You are the image selector! Your job is to choose an image, and then truthfully describe the image to the judge.",
-        m('form', [
+        "Role: Honest",
+        m('form', {style: 'display: inline;'}, [
           m('input', {
-            placeholder: 'Image URL',
+            placeholder: 'New Image URL',
             disabled: vnode.state.loading,
             value: vnode.state.imageUrlText,
             oninput: (e) => {
@@ -37,14 +37,14 @@ export default {
                   m.redraw()
                 })
             }
-          }, 'Set Image'),
+          }, 'Update Image'),
           vnode.state.error ? m('p', vnode.state.error) : null
         ])
       ])
     } else if (g.isLiar()) {
-      return m('div', "You are the liar! Your job is to lie about the true identity of the image. We're waiting for the other player to select an image...")
+      return m('div', "Role: Liar")
     } else {
-      return m('div', "You are the judge! One of the two players will be lying about the identity of the image, and it's your job to correctly guess who.")
+      return m('div', "Role: Judge")
     }
   }
 }

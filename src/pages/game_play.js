@@ -1,5 +1,6 @@
 import m from 'mithril'
 import {fabric} from 'fabric'
+import ImageSelector from '../components/image_selector'
 
 const COLORS = {
   RED: 'rgba(211, 49, 89, 0.9)',
@@ -35,6 +36,32 @@ function updateLoupe (vnode, pos) {
     loupe.style.pointerEvents = 'none'
     loupe.style.border = '2px solid #888'
     loupe.style.borderRadius = '3px'
+  }
+}
+
+function updateImage (vnode) {
+  if (vnode.attrs.game.imageUrl() !== vnode.state.lastImageUrl) {
+    vnode.state.lastImageUrl = vnode.attrs.game.imageUrl()
+    if (vnode.attrs.game.hasImage()) {
+      let thisImageUrl = vnode.attrs.game.imageUrl()
+      vnode.attrs.game.image().then(imgCanvas => {
+        fabric.Image.fromURL(imgCanvas.toDataURL(), function(imgObj) {
+          if (vnode.state.lastImageUrl === thisImageUrl) { // ensure it hasn't been changed again in the meantime
+            vnode.state.imgCanvas = imgCanvas
+            vnode.state.canvas.setHeight(imgCanvas.height)
+            vnode.state.canvas.setWidth(imgCanvas.width)
+            vnode.state.img = imgObj
+            vnode.state.img.selectable = false
+            m.redraw()
+          }
+        })
+      })
+    } else {
+      vnode.state.imgCanvas = null
+      vnode.state.canvas.setHeight(500)
+      vnode.state.canvas.setWidth(500)
+      vnode.state.img = null
+    }
   }
 }
 
@@ -110,6 +137,7 @@ function updateCanvas (vnode) {
   game.pixels('red').forEach(pixelHandler(COLORS.RED_FULL))
   game.pixels('blue').forEach(pixelHandler(COLORS.BLUE_FULL))
   updateLoupe(vnode)
+  updateImage(vnode)
 }
 
 export default {
@@ -118,6 +146,9 @@ export default {
     vnode.state.viewingPlayer = vnode.attrs.role === 'blue' ? 'blue' : 'red'
     vnode.state.revealImage = false
     vnode.state.mousePos = null
+    vnode.state.lastImageUrl = ""
+    vnode.state.img = null
+    vnode.state.imgCanvas = null
   },
   oncreate: (vnode) => {
     vnode.state.canvas = new fabric.Canvas('play')
@@ -145,19 +176,6 @@ export default {
     vnode.state.canvas.on('mouse:out', ({e}) => {
       updateLoupe(vnode, null)
     })
-    vnode.state.img = null
-    if (vnode.attrs.game.hasImage()) {
-      vnode.attrs.game.image().then(imgCanvas => {
-        vnode.state.imgCanvas = imgCanvas
-        vnode.state.canvas.setHeight(imgCanvas.height)
-        vnode.state.canvas.setWidth(imgCanvas.width)
-        fabric.Image.fromURL(imgCanvas.toDataURL(), function(imgObj) {
-          vnode.state.img = imgObj
-          vnode.state.img.selectable = false
-          m.redraw()
-        })
-      })
-    }
     updateCanvas(vnode)
   },
   onupdate: (vnode) => {
@@ -184,7 +202,6 @@ export default {
         toolbar.push(m('button', {onclick: () => {
           vnode.attrs.game.becomeDebater().then(color => {
             if (color) {
-              m.route.set('/game/:code/:role', {code: vnode.attrs.game.code, role: color}, {replace: true})
               vnode.state.viewingPlayer = color
             }
           })
@@ -201,15 +218,11 @@ export default {
       }
     }
     toolbar.push(m('button', {onclick: () => {
-      vnode.attrs.game.becomeDebater().then(color => {
-        if (color) {
-          m.route.set('/game/:code/:role', {code: vnode.attrs.game.code, role: color}, {replace: true})
-          vnode.state.viewingPlayer = color
-        }
-      })
+      vnode.attrs.game.reset()
     }}, 'Reset Board + Roles'))
 
     return m('div', [
+      m(ImageSelector, {game: vnode.attrs.game}),
       m('div', `You are ${vnode.attrs.role}. Your game code is ${vnode.attrs.game.code}`),
       playerbar,
       m('div', {style: 'position: relative;'}, [
