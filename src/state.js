@@ -165,13 +165,19 @@ export class Game {
     return index
   }
 
-  // 'hash' game code to get who is the liar and who selects the image
+  // 'hash' game code and state num to get who is the liar and who selects the image
+  // hashing algorithm inspired by https://stackoverflow.com/a/19303725
   _redIsLiar () {
     let num = 0
-    this.code.split("").forEach((char, i) => {
-      num += char.charCodeAt() * i
+    this.code.split("").forEach((char) => {
+      num += char.charCodeAt()
     })
-    return num % 12 < 6
+    let gameNum = 0
+    if (this.state) {
+      gameNum = this.state.gameNum
+    }
+    let rand = Math.sin(num+gameNum) * 10000
+    return (rand - Math.floor(rand)) >= 0.5
   }
 
   isImageSelector () {

@@ -16,7 +16,7 @@ Single pixel debate game
 
 - [x] updating image should update immediately, not on reload
 - [x] figure out solution for board resets, locking?
-- [ ] different liar each board reset
+- [x] different liar each board reset
 - [ ] rectangles
 - [ ] better loupe, for both rectangle and pixel tool
 
