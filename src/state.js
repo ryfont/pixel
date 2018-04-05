@@ -75,7 +75,6 @@ export function gameExists (checkId) {
 
 function gameTemplate (gameNum = 0) {
   return {
-    sketches: {red: {}, blue: {}},
     rectangles: {red: {}, blue: {}},
     image: '',
     gameNum: gameNum,
@@ -120,14 +119,14 @@ export class Game {
     this.onUpdates = []
     this.state = null
     this.code = gameId
-    this.lastGameNum = 0
+    this.lastGameNum = null
     this.role = role // role of this player, either 'red' 'blue' 'judge'
     this.setRole = setRole
     this.dbref = app.database().ref(`games/${gameId}`)
     this.dbref.on('value', snap => {
       this.state = snap.val()
       this.onUpdates.forEach(f => { f() })
-      if (['red', 'blue'].indexOf(this.role) >= 0 && this.lastGameNum !== this.state.gameNum) {
+      if (this.lastGameNum !== null && ['red', 'blue'].indexOf(this.role) >= 0 && this.lastGameNum !== this.state.gameNum) {
         // game has been reset!
         this.setRole('judge')
         this.role = 'judge'
@@ -193,13 +192,6 @@ export class Game {
     return this._addDrawing('pixels', str)
   }
 
-  sketches (player) {
-    if (this.state && this.state.sketches && this.state.sketches[player]) {
-      return this.state.sketches[player]
-    }
-    return {}
-  }
-
   imageUrl () {
     if (this.state && this.state.image) {
       return this.state.image
@@ -225,18 +217,9 @@ export class Game {
       })
   }
 
-  // points is array of {x: int, y: int} objects
-  addSketch (pathString) {
-    return this._addDrawing('sketches', pathString)
-  }
-
-  removeSketch (sketchId) {
-    return this._removeDrawing('sketches', sketchId)
-  }
-
   rectangles (player) {
-    if (this.state && this.state.sketches && this.state.sketches[player]) {
-      return Object.values(this.state.pixels[player]).map(str => {
+    if (this.state && this.state.rectangles && this.state.rectangles[player]) {
+      return Object.values(this.state.rectangles[player]).map(str => {
         let res = parseMultiplePixels(str)
         return {x: res[0].x, y: res[0].y, w: res[1].x, h: res[1].y}
       })

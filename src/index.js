@@ -6,6 +6,7 @@ import {Game} from './state'
 const GamePage = {
   oninit: (vnode) => {
     vnode.state.game = new Game(vnode.attrs.code, vnode.attrs.role, (newRole) => {
+      console.error('setting role:', newRole)
       m.route.set('/game/:code/:role', {code: vnode.attrs.code, role: newRole}, {replace: true})
     })
     vnode.state.game.onUpdate(m.redraw)

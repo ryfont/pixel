@@ -51,7 +51,6 @@ function updateImage (vnode) {
             vnode.state.canvas.setHeight(imgCanvas.height)
             vnode.state.canvas.setWidth(imgCanvas.width)
             vnode.state.img = imgObj
-            vnode.state.img.selectable = false
             m.redraw()
           }
         })
@@ -75,46 +74,41 @@ function updateCanvas (vnode) {
   let game = vnode.attrs.game
   canvas.clear()
   let canEdit = vnode.attrs.role === vnode.state.viewingPlayer
-  canvas.isDrawingMode = canEdit && vnode.state.tool === 'sketch'
-  canvas.freeDrawingBrush.color = vnode.attrs.role === 'red' ? COLORS.RED_FULL : COLORS.BLUE_FULL
-  canvas.freeDrawingBrush.width = 10
   canvas.hoverCursor = 'default'
-  canvas.selection = false
   if (canEdit && tool !== 'erase') {
     canvas.hoverCursor = 'crosshair'
   }
-  if (img && (game.currentPlayer !== 'judge' || vnode.state.revealImage)) {
+  if (img && (vnode.attrs.role !== 'judge' || vnode.state.revealImage)) {
     canvas.add(img)
   }
-  function sketchHandler (color) {
-    return ([player, sketchId, sketch]) => {
-      let sketchData = JSON.parse(sketch)
-      var path = new fabric.Path(sketchData.path)
-      path.firebaseId = sketchId
-      path.playerName = player
-      path.set({
-        strokeWidth: 10,
-        stroke: color,
-        strokeLineCap: 'round',
-        fill: '',
-        top: sketchData.top,
-        left: sketchData.left,
-        hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null,
-        selectable: false})
-      canvas.add(path)
-    }
-  }
-  function getSketches(player) {
-    let sketches = game.sketches(player)
-    return Object.keys(sketches).map(k => [player, k, sketches[k]])
-  }
-  if (vnode.state.viewingPlayer === 'red') {
-    getSketches('blue').forEach(sketchHandler(COLORS.BLUE_FADED))
-    getSketches('red').forEach(sketchHandler(COLORS.RED))
-  } else {
-    getSketches('red').forEach(sketchHandler(COLORS.RED_FADED))
-    getSketches('blue').forEach(sketchHandler(COLORS.BLUE))
-  }
+  // function sketchHandler (color) {
+  //   return ([player, sketchId, sketch]) => {
+  //     let sketchData = JSON.parse(sketch)
+  //     var path = new fabric.Path(sketchData.path)
+  //     path.firebaseId = sketchId
+  //     path.playerName = player
+  //     path.set({
+  //       strokeWidth: 10,
+  //       stroke: color,
+  //       strokeLineCap: 'round',
+  //       fill: '',
+  //       top: sketchData.top,
+  //       left: sketchData.left,
+  //       hoverCursor: (canEdit && tool === 'erase' && player === game.currentPlayer) ? 'pointer' : null})
+  //     canvas.add(path)
+  //   }
+  // }
+  // function getSketches(player) {
+  //   let sketches = game.sketches(player)
+  //   return Object.keys(sketches).map(k => [player, k, sketches[k]])
+  // }
+  // if (vnode.state.viewingPlayer === 'red') {
+  //   getSketches('blue').forEach(sketchHandler(COLORS.BLUE_FADED))
+  //   getSketches('red').forEach(sketchHandler(COLORS.RED))
+  // } else {
+  //   getSketches('red').forEach(sketchHandler(COLORS.RED_FADED))
+  //   getSketches('blue').forEach(sketchHandler(COLORS.BLUE))
+  // }
   function pixelHandler (color) {
     return ({x,y}) => {
       if (vnode.state.imgCanvas) {
@@ -126,7 +120,6 @@ function updateCanvas (vnode) {
           height: PIXEL_WIDTH,
           stroke: color,
           strokeWidth: 2,
-          selectable: false,
           rx: 3,
           ry: 3
         })
@@ -142,7 +135,7 @@ function updateCanvas (vnode) {
 
 export default {
   oninit: (vnode) => {
-    vnode.state.tool = 'sketch' // either 'sketch', 'pixel', 'erase'
+    vnode.state.tool = 'rect' // either 'rect', 'pixel', 'erase'
     vnode.state.viewingPlayer = vnode.attrs.role === 'blue' ? 'blue' : 'red'
     vnode.state.revealImage = false
     vnode.state.mousePos = null
@@ -151,17 +144,12 @@ export default {
     vnode.state.imgCanvas = null
   },
   oncreate: (vnode) => {
-    vnode.state.canvas = new fabric.Canvas('play')
+    vnode.state.canvas = new fabric.StaticCanvas('play')
     vnode.state.canvas.setHeight(500)
     vnode.state.canvas.setWidth(500)
-    vnode.state.canvas.on('path:created', ({path}) => {
-      let pathString = path.toJSON().path.map(p => p.join(' ')).join(' ')
-      vnode.attrs.game.addSketch(JSON.stringify({path: pathString, left: path.left, top: path.top}))
-      m.redraw()
-    })
     vnode.state.canvas.on('mouse:down', ({e, target}) => {
       if (target && target.playerName && target.playerName === vnode.attrs.role && vnode.state.tool === 'erase') {
-        vnode.attrs.game.removeSketch(target.firebaseId)
+        vnode.attrs.game.removeRectangle(target.firebaseId)
         m.redraw()
       }
       if (vnode.state.tool === 'pixel') {
@@ -211,7 +199,7 @@ export default {
     } else {
       if (vnode.attrs.role === vnode.state.viewingPlayer) {
         toolbar = toolbar.concat([
-          stateButton('tool', 'sketch', 'Sketch Tool'),
+          stateButton('tool', 'rect', 'Rectangle Tool'),
           stateButton('tool', 'pixel', 'Pixel Reveal Tool'),
           stateButton('tool', 'erase', 'Eraser'),
         ])
