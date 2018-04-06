@@ -1,5 +1,4 @@
 import m from 'mithril'
-import {fabric} from 'fabric'
 import ImageSelector from '../components/image_selector'
 
 const COLORS = {
@@ -13,6 +12,14 @@ const COLORS = {
 
 const PIXEL_WIDTH = 19
 const LOUPE_VIEW_PAD = 14
+const PIXEL_DENSITY = 2
+
+function setCanvasSize (canvas, width, height) {
+  canvas.width = width*PIXEL_DENSITY
+  canvas.height = height*PIXEL_DENSITY
+  canvas.style.width = `${width}px`
+  canvas.style.height = `${height}px`
+}
 
 function normalizeRect(currentRect) {
   let {x1,x2,y1,y2} = currentRect
@@ -28,7 +35,7 @@ function updateLoupe (vnode, pos) {
   let loupeCtx = document.getElementById('loupe').getContext('2d')
   loupeCtx.imageSmoothingEnabled = false;
   loupeCtx.clearRect(0, 0, 600, 600);
-  if (vnode.state.tool === 'erase' || vnode.attrs.game.role === 'judge' || vnode.state.imgCanvas === null) {
+  if ((vnode.attrs.game.role === 'judge' && vnode.state.revealImage === false) || vnode.state.imgCanvas === null) {
     return
   }
   if (pos === undefined) {
@@ -63,8 +70,7 @@ function updateImage (vnode) {
           imgObj.selectable = false
           if (vnode.state.lastImageUrl === thisImageUrl) { // ensure it hasn't been changed again in the meantime
             vnode.state.imgCanvas = imgCanvas
-            vnode.state.canvas.setHeight(imgCanvas.height)
-            vnode.state.canvas.setWidth(imgCanvas.width)
+            setCanvasSize(vnode.state.canvas, imgCanvas.width, imgCanvas.height)
             vnode.state.img = imgObj
             vnode.state.img.selectable
             m.redraw()
@@ -73,8 +79,7 @@ function updateImage (vnode) {
       })
     } else {
       vnode.state.imgCanvas = null
-      vnode.state.canvas.setHeight(500)
-      vnode.state.canvas.setWidth(500)
+      setCanvasSize(vnode.state.canvas, 500, 500)
       vnode.state.img = null
     }
   }
@@ -85,49 +90,36 @@ function pixelColor (vnode, pos) {
   return `rgba(${pixelData.join(',')})`
 }
 
+function getMouseCoords(vnode, event) {
+  let bounds = vnode.state.canvas.getBoundingClientRect()
+  return {x: (event.clientX - bounds.left), y: (event.clientY - bounds.top)}
+}
+
 function updateCanvas (vnode) {
   updateImage(vnode)
   let {canvas, tool, img} = vnode.state
   let game = vnode.attrs.game
-  canvas.clear()
+  let ctx = canvas.getContext('2d')
+  ctx.imageSmoothingEnabled = false
+  ctx.lineWidth = 1
+  ctx.clearRect(0, 0, 500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
   let canEdit = vnode.attrs.role === vnode.state.viewingPlayer
-  canvas.hoverCursor = 'default'
-  canvas.selection = false
+  // canvas.hoverCursor = 'default'
+  // canvas.selection = false
   if (canEdit && tool !== 'erase') {
-    canvas.hoverCursor = 'crosshair'
+    // canvas.hoverCursor = 'crosshair'
   }
-  if (img && (vnode.attrs.role !== 'judge' || vnode.state.revealImage)) {
-    canvas.add(img)
+  if (vnode.state.imgCanvas && (vnode.attrs.role !== 'judge' || vnode.state.revealImage)) {
+    // canvas.add(img)
+    ctx.drawImage(
+      vnode.state.imgCanvas,
+      0, 0, vnode.state.imgCanvas.width, vnode.state.imgCanvas.height,
+      0, 0, vnode.state.canvas.width, vnode.state.canvas.height)
   }
   function drawRects (player, color) {
-    function drawFilledRect (x, y, w, h, id, fillColor) {
-      let rect = new fabric.Rect({
-        left: x,
-        top: y,
-        fill: fillColor,
-        width: w,
-        height: h,
-        strokeWidth: 0,
-        selectable: false,
-        hoverCursor: (canEdit && tool === 'erase' && player === game.role) ? 'pointer' : null
-      })
-      rect.firebaseId = id
-      rect.playerName = player
-      canvas.add(rect)
-    }
-    // we draw each edge as its own rect because fabric.js's click detection system
-    // can't ignore the center of a rectangle, and we only want to register clicks
-    // for erasing if somebody clicks the border of the rectangle
+    ctx.strokeStyle = color
     function drawRect (x, y, w, h, id) {
-      drawFilledRect(x, y, 1, h, id, color)
-      drawFilledRect(x+1, y, w, 1, id, color)
-      drawFilledRect(x+w, y+1, 1, h, id, color)
-      drawFilledRect(x, y+h, w, 1, id, color)
-      // wider bounding box to make rects easier to click
-      drawFilledRect(x-4, y-4, 8, h, id, 'transparent')
-      drawFilledRect(x-4, y-4, w, 8, id, 'transparent')
-      drawFilledRect(x+w-4, y-4, 8, h, id, 'transparent')
-      drawFilledRect(x-4, y+h-4, w+8, 8, id, 'transparent')
+      ctx.strokeRect(x*PIXEL_DENSITY, y*PIXEL_DENSITY, w*PIXEL_DENSITY, h*PIXEL_DENSITY)
     }
     let rectangles = game.rectangles(player)
     Object.keys(rectangles).forEach(rectId => {
@@ -147,21 +139,15 @@ function updateCanvas (vnode) {
     drawRects('blue', COLORS.BLUE)
   }
   function pixelHandler (color) {
+    ctx.lineWidth = 2
+    ctx.strokeStyle = color
     return ({x,y}) => {
       if (vnode.state.imgCanvas) {
-        let rect = new fabric.Rect({
-          left: x - PIXEL_WIDTH/2 + 0.5,
-          top: y - PIXEL_WIDTH/2 + 0.5,
-          fill: pixelColor(vnode, {x,y}),
-          width: PIXEL_WIDTH,
-          height: PIXEL_WIDTH,
-          stroke: color,
-          strokeWidth: 2,
-          rx: 3,
-          ry: 3,
-          selectable: false
-        })
-        canvas.add(rect)
+        ctx.fillStyle = pixelColor(vnode, {x,y})
+        ctx.beginPath()
+        ctx.rect((x - PIXEL_WIDTH/2 + 0.5)*PIXEL_DENSITY, (y - PIXEL_WIDTH/2 + 0.5)*PIXEL_DENSITY, PIXEL_WIDTH*PIXEL_DENSITY, PIXEL_WIDTH*PIXEL_DENSITY)
+        ctx.fill()
+        ctx.stroke()
       }
     }
   }
@@ -183,14 +169,15 @@ export default {
     vnode.state.rectEnd = null
   },
   oncreate: (vnode) => {
-    vnode.state.canvas = new fabric.Canvas('play')
-    vnode.state.canvas.setHeight(500)
-    vnode.state.canvas.setWidth(500)
-    vnode.state.canvas.on('mouse:down', ({e, target}) => {
+    vnode.state.canvas = document.getElementById('play')
+    vnode.state.canvas
+    setCanvasSize(vnode.state.canvas, 500, 500)
+    vnode.state.canvas.onmousedown = event => {
       if (vnode.attrs.game.role === 'judge') {
         return
       }
-      let {x, y} = vnode.state.canvas.getPointer(e)
+      let {x,y} = getMouseCoords(vnode, event)
+      let target = null // TODO SET PROPERLY
       if (target && target.playerName && target.playerName === vnode.attrs.game.role && vnode.state.tool === 'erase') {
         vnode.attrs.game.removeRectangle(target.firebaseId)
       } else if (vnode.state.tool === 'pixel') {
@@ -199,9 +186,9 @@ export default {
         vnode.state.currentRect = {x1: x, y1: y, x2: x, y2: y}
       }
       m.redraw()
-    })
-    vnode.state.canvas.on('mouse:up', ({e, target}) => {
-      let {x, y} = vnode.state.canvas.getPointer(e)
+    }
+    vnode.state.canvas.onmouseup = event => {
+      let {x,y} = getMouseCoords(vnode, event)
       if (vnode.state.tool === 'pixel') {
         vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
       } else if (vnode.state.tool === 'rect' && vnode.state.currentRect !== null) {
@@ -210,16 +197,16 @@ export default {
         vnode.state.currentRect = null
         m.redraw()
       }
-    })
-    vnode.state.canvas.on('mouse:move', ({e}) => {
-      let {x, y} = vnode.state.canvas.getPointer(e)
+    }
+    vnode.state.canvas.onmousemove = event => {
+      let {x,y} = getMouseCoords(vnode, event)
       updateLoupe(vnode, {x, y})
       if (vnode.state.currentRect) {
         vnode.state.currentRect.x2 = x
         vnode.state.currentRect.y2 = y
         m.redraw()
       }
-    })
+    }
     updateCanvas(vnode)
   },
   onupdate: (vnode) => {
@@ -274,7 +261,7 @@ export default {
       m('div', `You are ${vnode.attrs.role}. Your game code is ${vnode.attrs.game.code}`),
       playerbar,
       m('div', {style: 'position: relative; display: flex; align-items: flex-start;'}, [
-        m('canvas#play', {style: 'border: 1px solid #ccc'}),
+        m('canvas#play', {style: 'box-shadow: 0px 0px 0px 1px #ccc; cursor: crosshair;'}),
         m('canvas#loupe', {width: 600, height:600, style: 'width: 300px; height: 300px;'})
       ]),
       m('div', toolbar),
