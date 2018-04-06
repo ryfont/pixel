@@ -14,15 +14,6 @@ Single pixel debate game
 
 ## TODO
 
-- [x] updating image should update immediately, not on reload
-- [x] figure out solution for board resets, locking?
-- [x] different liar each board reset
-- [x] rectangles
-- [x] pixel reveal tool has bugs, should disable loupe always when judge, and errors if there is no image
-- [x] only erase when clicking rectangle border
-- [x] better loupe, for both rectangle and pixel tool
-
-
 - [ ] don't freeze on empty codes
 - [ ] eraser processes click events on invisible fill
   - [ ] would be nice to indicate somehow what element is going to be deleted
