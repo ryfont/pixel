@@ -51,7 +51,7 @@ function parseMultiplePixels (s) {
 function serializeMultiplePixels (pixels) {
   let parts = []
   pixels.forEach(({x, y}) => {
-    parts.push([x, y].map(Math.floor).join(','))
+    parts.push([x, y].join(','))
   })
   return parts.join('|')
 }

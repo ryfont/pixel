@@ -18,9 +18,9 @@ Single pixel debate game
 - [x] figure out solution for board resets, locking?
 - [x] different liar each board reset
 - [x] rectangles
-- [ ] pixel reveal tool has bugs, should disable loupe always when judge, and errors if there is no image
+- [x] pixel reveal tool has bugs, should disable loupe always when judge, and errors if there is no image
 - [x] only erase when clicking rectangle border
-- [ ] better loupe, for both rectangle and pixel tool
+- [x] better loupe, for both rectangle and pixel tool
 
 
 - [ ] don't freeze on empty codes

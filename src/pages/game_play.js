@@ -12,6 +12,7 @@ const COLORS = {
 }
 
 const PIXEL_WIDTH = 19
+const LOUPE_VIEW_PAD = 14
 
 function normalizeRect(currentRect) {
   let {x1,x2,y1,y2} = currentRect
@@ -24,29 +25,32 @@ function normalizeRect(currentRect) {
 }
 
 function updateLoupe (vnode, pos) {
-  if (vnode.state.tool !== 'pixel') {
+  let loupeCtx = document.getElementById('loupe').getContext('2d')
+  loupeCtx.imageSmoothingEnabled = false;
+  loupeCtx.clearRect(0, 0, 600, 600);
+  if (vnode.state.tool === 'erase' || vnode.attrs.game.role === 'judge' || vnode.state.imgCanvas === null) {
     return
   }
   if (pos === undefined) {
     pos = vnode.state.mousePos
   }
-
   vnode.state.mousePos = pos
-  let loupe = document.getElementById('loupe')
   if (pos === null) {
-    loupe.style.display = 'none'
-  } else {
-    loupe.style.display = 'block'
-    loupe.style.position = 'absolute'
-    loupe.style.left = `${pos.x - (PIXEL_WIDTH*.5) + 0.5}px`
-    loupe.style.top = `${pos.y + PIXEL_WIDTH}px`
-    loupe.style.backgroundColor = pixelColor(vnode, pos)
-    loupe.style.width = `${PIXEL_WIDTH-2}px`
-    loupe.style.height = `${PIXEL_WIDTH-2}px`
-    loupe.style.pointerEvents = 'none'
-    loupe.style.border = '2px solid #888'
-    loupe.style.borderRadius = '3px'
+    return
   }
+  let x = Math.round(pos.x)
+  let y = Math.round(pos.y)
+  loupeCtx.drawImage(
+    vnode.state.imgCanvas,
+    x-LOUPE_VIEW_PAD, y-LOUPE_VIEW_PAD, LOUPE_VIEW_PAD*2+1, LOUPE_VIEW_PAD*2+1,
+    0, 0, 600, 600)
+  loupeCtx.lineWidth = 1
+  loupeCtx.beginPath()
+  loupeCtx.moveTo(0, 300)
+  loupeCtx.lineTo(600, 300)
+  loupeCtx.moveTo(300, 0)
+  loupeCtx.lineTo(300, 600)
+  loupeCtx.stroke()
 }
 
 function updateImage (vnode) {
@@ -190,7 +194,7 @@ export default {
       if (target && target.playerName && target.playerName === vnode.attrs.game.role && vnode.state.tool === 'erase') {
         vnode.attrs.game.removeRectangle(target.firebaseId)
       } else if (vnode.state.tool === 'pixel') {
-        vnode.attrs.game.addPixel(x, y)
+        vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
       } else if (vnode.state.tool === 'rect') {
         vnode.state.currentRect = {x1: x, y1: y, x2: x, y2: y}
       }
@@ -199,7 +203,7 @@ export default {
     vnode.state.canvas.on('mouse:up', ({e, target}) => {
       let {x, y} = vnode.state.canvas.getPointer(e)
       if (vnode.state.tool === 'pixel') {
-        vnode.attrs.game.addPixel(x, y)
+        vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
       } else if (vnode.state.tool === 'rect' && vnode.state.currentRect !== null) {
         let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
         vnode.attrs.game.addRectangle(x,y,w,h)
@@ -269,9 +273,9 @@ export default {
       m(ImageSelector, {game: vnode.attrs.game}),
       m('div', `You are ${vnode.attrs.role}. Your game code is ${vnode.attrs.game.code}`),
       playerbar,
-      m('div', {style: 'position: relative;'}, [
+      m('div', {style: 'position: relative; display: flex; align-items: flex-start;'}, [
         m('canvas#play', {style: 'border: 1px solid #ccc'}),
-        vnode.state.tool === 'pixel' ? m('div#loupe') : null
+        m('canvas#loupe', {width: 600, height:600, style: 'width: 300px; height: 300px;'})
       ]),
       m('div', toolbar),
     ])
