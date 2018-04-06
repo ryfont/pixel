@@ -45,8 +45,7 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
     dx -= LOUPE_VIEW_PAD*pixelMult
     dy -= LOUPE_VIEW_PAD*pixelMult
   }
-  if (vnode.state.imgCanvas && (vnode.attrs.role !== 'judge' || vnode.state.revealImage)) {
-    // let drawStart = isLoupe ? (LOUPE_VIEW_PAD * pixelMult) : 0
+  if (vnode.state.imgCanvas && (vnode.attrs.game.role !== 'judge' || vnode.state.revealImage)) {
     ctx.drawImage(
       vnode.state.imgCanvas,
       0-dx, 0-dy, pixelMult*vnode.state.imgCanvas.width, pixelMult*vnode.state.imgCanvas.height)
