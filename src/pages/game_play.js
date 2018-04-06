@@ -109,11 +109,19 @@ function updateLoupe (vnode, pos) {
   let y = Math.round(pos.y)
   drawGame(vnode, loupeCanvas, true, x, y)
   loupeCtx.lineWidth = 1
+  loupeCtx.strokeStyle = '#333'
   loupeCtx.beginPath()
   loupeCtx.moveTo(0, 300)
   loupeCtx.lineTo(600, 300)
   loupeCtx.moveTo(300, 0)
   loupeCtx.lineTo(300, 600)
+  loupeCtx.stroke()
+  loupeCtx.strokeStyle = '#ccc'
+  loupeCtx.beginPath()
+  loupeCtx.moveTo(0, 301)
+  loupeCtx.lineTo(600, 301)
+  loupeCtx.moveTo(301, 0)
+  loupeCtx.lineTo(301, 600)
   loupeCtx.stroke()
 }
 
