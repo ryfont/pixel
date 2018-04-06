@@ -10,7 +10,7 @@ const COLORS = {
   BLUE_FADED: 'rgba(49, 135, 211, 0.2)'
 }
 
-const PIXEL_WIDTH = 19
+const PIXEL_WIDTH = 11
 const LOUPE_VIEW_PAD = 14
 const PIXEL_DENSITY = 2
 
@@ -31,95 +31,30 @@ function normalizeRect(currentRect) {
   }
 }
 
-function updateLoupe (vnode, pos) {
-  let loupeCtx = document.getElementById('loupe').getContext('2d')
-  loupeCtx.imageSmoothingEnabled = false;
-  loupeCtx.clearRect(0, 0, 600, 600);
-  if ((vnode.attrs.game.role === 'judge' && vnode.state.revealImage === false) || vnode.state.imgCanvas === null) {
-    return
-  }
-  if (pos === undefined) {
-    pos = vnode.state.mousePos
-  }
-  vnode.state.mousePos = pos
-  if (pos === null) {
-    return
-  }
-  let x = Math.round(pos.x)
-  let y = Math.round(pos.y)
-  loupeCtx.drawImage(
-    vnode.state.imgCanvas,
-    x-LOUPE_VIEW_PAD, y-LOUPE_VIEW_PAD, LOUPE_VIEW_PAD*2+1, LOUPE_VIEW_PAD*2+1,
-    0, 0, 600, 600)
-  loupeCtx.lineWidth = 1
-  loupeCtx.beginPath()
-  loupeCtx.moveTo(0, 300)
-  loupeCtx.lineTo(600, 300)
-  loupeCtx.moveTo(300, 0)
-  loupeCtx.lineTo(300, 600)
-  loupeCtx.stroke()
-}
-
-function updateImage (vnode) {
-  if (vnode.attrs.game.imageUrl() !== vnode.state.lastImageUrl) {
-    vnode.state.lastImageUrl = vnode.attrs.game.imageUrl()
-    if (vnode.attrs.game.hasImage()) {
-      let thisImageUrl = vnode.attrs.game.imageUrl()
-      vnode.attrs.game.image().then(imgCanvas => {
-        fabric.Image.fromURL(imgCanvas.toDataURL(), function(imgObj) {
-          imgObj.selectable = false
-          if (vnode.state.lastImageUrl === thisImageUrl) { // ensure it hasn't been changed again in the meantime
-            vnode.state.imgCanvas = imgCanvas
-            setCanvasSize(vnode.state.canvas, imgCanvas.width, imgCanvas.height)
-            vnode.state.img = imgObj
-            vnode.state.img.selectable
-            m.redraw()
-          }
-        })
-      })
-    } else {
-      vnode.state.imgCanvas = null
-      setCanvasSize(vnode.state.canvas, 500, 500)
-      vnode.state.img = null
-    }
-  }
-}
-
-function pixelColor (vnode, pos) {
-  let pixelData = vnode.state.imgCanvas.getContext('2d').getImageData(pos.x, pos.y, 1, 1).data
-  return `rgba(${pixelData.join(',')})`
-}
-
-function getMouseCoords(vnode, event) {
-  let bounds = vnode.state.canvas.getBoundingClientRect()
-  return {x: (event.clientX - bounds.left), y: (event.clientY - bounds.top)}
-}
-
-function updateCanvas (vnode) {
-  updateImage(vnode)
-  let {canvas, tool, img} = vnode.state
+function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   let game = vnode.attrs.game
   let ctx = canvas.getContext('2d')
   ctx.imageSmoothingEnabled = false
-  ctx.lineWidth = 1
+  ctx.lineWidth = isLoupe ? 8 : 1
   ctx.clearRect(0, 0, 500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
   let canEdit = vnode.attrs.role === vnode.state.viewingPlayer
-  // canvas.hoverCursor = 'default'
-  // canvas.selection = false
-  if (canEdit && tool !== 'erase') {
-    // canvas.hoverCursor = 'crosshair'
+  let pixelMult = isLoupe ? 600/(LOUPE_VIEW_PAD*2+1) : PIXEL_DENSITY
+  dx *= pixelMult
+  dy *= pixelMult
+  if (isLoupe) {
+    dx -= LOUPE_VIEW_PAD*pixelMult
+    dy -= LOUPE_VIEW_PAD*pixelMult
   }
   if (vnode.state.imgCanvas && (vnode.attrs.role !== 'judge' || vnode.state.revealImage)) {
-    // canvas.add(img)
+    // let drawStart = isLoupe ? (LOUPE_VIEW_PAD * pixelMult) : 0
     ctx.drawImage(
       vnode.state.imgCanvas,
-      0, 0, vnode.state.imgCanvas.width, vnode.state.imgCanvas.height,
-      0, 0, vnode.state.canvas.width, vnode.state.canvas.height)
+      0-dx, 0-dy, pixelMult*vnode.state.imgCanvas.width, pixelMult*vnode.state.imgCanvas.height)
   }
   function drawRects (player, color) {
     ctx.strokeStyle = color
     function drawRect (x, y, w, h, id) {
-      ctx.strokeRect(x*PIXEL_DENSITY, y*PIXEL_DENSITY, w*PIXEL_DENSITY, h*PIXEL_DENSITY)
+      ctx.strokeRect((x+.5)*pixelMult-dx, (y+.5)*pixelMult-dy, w*pixelMult, h*pixelMult)
     }
     let rectangles = game.rectangles(player)
     Object.keys(rectangles).forEach(rectId => {
@@ -139,13 +74,17 @@ function updateCanvas (vnode) {
     drawRects('blue', COLORS.BLUE)
   }
   function pixelHandler (color) {
-    ctx.lineWidth = 2
+    let drawnPixelWidth = isLoupe ? 1 : PIXEL_WIDTH
+    ctx.lineWidth = isLoupe ? 5 : 2
     ctx.strokeStyle = color
     return ({x,y}) => {
       if (vnode.state.imgCanvas) {
         ctx.fillStyle = pixelColor(vnode, {x,y})
         ctx.beginPath()
-        ctx.rect((x - PIXEL_WIDTH/2 + 0.5)*PIXEL_DENSITY, (y - PIXEL_WIDTH/2 + 0.5)*PIXEL_DENSITY, PIXEL_WIDTH*PIXEL_DENSITY, PIXEL_WIDTH*PIXEL_DENSITY)
+        ctx.rect((x - drawnPixelWidth/2 + 0.5)*pixelMult-dx,
+          (y - drawnPixelWidth/2 + 0.5)*pixelMult-dy,
+          drawnPixelWidth*pixelMult,
+          drawnPixelWidth*pixelMult)
         ctx.fill()
         ctx.stroke()
       }
@@ -153,6 +92,63 @@ function updateCanvas (vnode) {
   }
   game.pixels('red').forEach(pixelHandler(COLORS.RED_FULL))
   game.pixels('blue').forEach(pixelHandler(COLORS.BLUE_FULL))
+}
+
+function updateLoupe (vnode, pos) {
+  let loupeCanvas = document.getElementById('loupe')
+  let loupeCtx = loupeCanvas.getContext('2d')
+  loupeCtx.imageSmoothingEnabled = false;
+  loupeCtx.clearRect(0, 0, 600, 600);
+  if (pos === undefined) {
+    pos = vnode.state.mousePos
+  }
+  vnode.state.mousePos = pos
+  if (pos === null) {
+    return
+  }
+  let x = Math.round(pos.x)
+  let y = Math.round(pos.y)
+  drawGame(vnode, loupeCanvas, true, x, y)
+  loupeCtx.lineWidth = 1
+  loupeCtx.beginPath()
+  loupeCtx.moveTo(0, 300)
+  loupeCtx.lineTo(600, 300)
+  loupeCtx.moveTo(300, 0)
+  loupeCtx.lineTo(300, 600)
+  loupeCtx.stroke()
+}
+
+function updateImage (vnode) {
+  if (vnode.attrs.game.imageUrl() !== vnode.state.lastImageUrl) {
+    vnode.state.lastImageUrl = vnode.attrs.game.imageUrl()
+    if (vnode.attrs.game.hasImage()) {
+      let thisImageUrl = vnode.attrs.game.imageUrl()
+      vnode.attrs.game.image().then(imgCanvas => {
+        if (vnode.state.lastImageUrl === thisImageUrl) { // ensure it hasn't been changed again in the meantime
+          vnode.state.imgCanvas = imgCanvas
+          setCanvasSize(vnode.state.canvas, imgCanvas.width, imgCanvas.height)
+          m.redraw()
+        }
+      })
+    } else {
+      vnode.state.imgCanvas = null
+      setCanvasSize(vnode.state.canvas, 500, 500)
+    }
+  }
+}
+
+function pixelColor (vnode, pos) {
+  let pixelData = vnode.state.imgCanvas.getContext('2d').getImageData(pos.x, pos.y, 1, 1).data
+  return `rgba(${pixelData.join(',')})`
+}
+
+function getMouseCoords(vnode, event) {
+  let bounds = vnode.state.canvas.getBoundingClientRect()
+  return {x: (event.clientX - bounds.left), y: (event.clientY - bounds.top)}
+}
+
+function updateCanvas (vnode) {
+  drawGame(vnode, vnode.state.canvas, false)
   updateLoupe(vnode)
 }
 
@@ -163,7 +159,6 @@ export default {
     vnode.state.revealImage = false
     vnode.state.mousePos = null
     vnode.state.lastImageUrl = ""
-    vnode.state.img = null
     vnode.state.imgCanvas = null
     vnode.state.currentRect = null
     vnode.state.rectEnd = null
@@ -207,9 +202,11 @@ export default {
         m.redraw()
       }
     }
+    updateImage(vnode)
     updateCanvas(vnode)
   },
   onupdate: (vnode) => {
+    updateImage(vnode)
     updateCanvas(vnode)
   },
   view: (vnode) => {
