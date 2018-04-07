@@ -7,12 +7,50 @@ const COLORS = {
   RED_FULL: 'rgba(211, 49, 89, 1)',
   BLUE_FULL: 'rgba(49, 135, 211, 1)',
   RED_FADED: 'rgba(211, 49, 89, 0.2)',
-  BLUE_FADED: 'rgba(49, 135, 211, 0.2)'
+  BLUE_FADED: 'rgba(49, 135, 211, 0.2)',
+  SELECTION: 'rgba(157, 35, 220, 0.9)'
 }
 
 const PIXEL_WIDTH = 11
 const LOUPE_VIEW_PAD = 14
 const PIXEL_DENSITY = 2
+const ERASER_SIZE = 10
+
+// returns clicked rect at x, y
+// return null if no rect within +- 10 pixels of clicked point
+function closestRect (rectangles, x, y) {
+  let best = null
+  let bestDist = ERASER_SIZE
+  Object.keys(rectangles).forEach(rectId => {
+    let rect = rectangles[rectId]
+    let overallDist = Math.min(
+      manhattanDistToFilledRect(x, y, rect.x, rect.y, 1, rect.h),
+      manhattanDistToFilledRect(x, y, rect.x, rect.y, rect.w, 1),
+      manhattanDistToFilledRect(x, y, rect.x+rect.w, rect.y, 1, rect.h),
+      manhattanDistToFilledRect(x, y, rect.x, rect.y+rect.h, rect.w, 1)
+    )
+    if (overallDist < bestDist) {
+      bestDist = overallDist
+      best = rectId
+    }
+  })
+  return best
+}
+
+function manhattanDistToFilledRect (pointX, pointY, x, y, w, h) {
+  let totalDist = 0
+  if (pointX < x) {
+    totalDist += x-pointX
+  } else if (pointX > x+w) {
+    totalDist += pointX-(x+w)
+  }
+  if (pointY < y) {
+    totalDist += y-pointY
+  } else if (pointY > y+h) {
+    totalDist += pointY-(y+h)
+  }
+  return totalDist
+}
 
 function setCanvasSize (canvas, width, height) {
   canvas.width = width*PIXEL_DENSITY
@@ -51,8 +89,12 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
       0-dx, 0-dy, pixelMult*vnode.state.imgCanvas.width, pixelMult*vnode.state.imgCanvas.height)
   }
   function drawRects (player, color) {
-    ctx.strokeStyle = color
     function drawRect (x, y, w, h, id) {
+      if (!isLoupe && id === vnode.state.closestRect && vnode.state.tool === 'erase' && player === vnode.attrs.game.role) {
+        ctx.strokeStyle = COLORS.SELECTION
+      } else {
+        ctx.strokeStyle = color
+      }
       ctx.strokeRect((x+.5)*pixelMult-dx, (y+.5)*pixelMult-dy, w*pixelMult, h*pixelMult)
     }
     let rectangles = game.rectangles(player)
@@ -169,6 +211,7 @@ export default {
     vnode.state.imgCanvas = null
     vnode.state.currentRect = null
     vnode.state.rectEnd = null
+    vnode.state.closestRect = null
   },
   oncreate: (vnode) => {
     vnode.state.canvas = document.getElementById('play')
@@ -179,9 +222,8 @@ export default {
         return
       }
       let {x,y} = getMouseCoords(vnode, event)
-      let target = null // TODO SET PROPERLY
-      if (target && target.playerName && target.playerName === vnode.attrs.game.role && vnode.state.tool === 'erase') {
-        vnode.attrs.game.removeRectangle(target.firebaseId)
+      if (vnode.state.tool === 'erase' && vnode.state.closestRect) {
+        vnode.attrs.game.removeRectangle(vnode.state.closestRect)
       } else if (vnode.state.tool === 'pixel') {
         vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
       } else if (vnode.state.tool === 'rect') {
@@ -202,6 +244,12 @@ export default {
     }
     vnode.state.canvas.onmousemove = event => {
       let {x,y} = getMouseCoords(vnode, event)
+      if (vnode.attrs.game.role !== 'judge') {
+        vnode.state.closestRect = closestRect(vnode.attrs.game.rectangles(vnode.attrs.game.role), x, y)
+      } else {
+        vnode.state.closestRect = null
+      }
+      updateCanvas(vnode)
       updateLoupe(vnode, {x, y})
       if (vnode.state.currentRect) {
         vnode.state.currentRect.x2 = x
