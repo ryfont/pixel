@@ -27,16 +27,17 @@ export default {
             g.setImageUrl(vnode.state.imageUrlText)
               .then(() => {
                 vnode.state.loading = false
+                vnode.state.error = null
                 m.redraw()
               })
               .catch((e) => {
                 vnode.state.loading = false
-                vnode.state.error = `Either that image couldn't be found, or isn't set up to allow loading from other domains: ${e}`
+                vnode.state.error = `Either that image couldn't be found, or isn't set up to allow loading from other domains.`
                 m.redraw()
               })
           }
         }, 'Update Image'),
-        vnode.state.error ? m('p', vnode.state.error) : null
+        vnode.state.error ? m('span', vnode.state.error) : null
       ])
     ])
   }
