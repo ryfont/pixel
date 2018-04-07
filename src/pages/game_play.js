@@ -11,7 +11,7 @@ const COLORS = {
   SELECTION: 'rgba(157, 35, 220, 0.9)'
 }
 
-const PIXEL_WIDTH = 11
+const PIXEL_WIDTH = 9
 const LOUPE_VIEW_PAD = 14
 const PIXEL_DENSITY = 2
 const ERASER_SIZE = 10
@@ -73,8 +73,10 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   let game = vnode.attrs.game
   let ctx = canvas.getContext('2d')
   ctx.imageSmoothingEnabled = false
-  ctx.lineWidth = isLoupe ? 8 : 1
   ctx.clearRect(0, 0, 500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
+  if (isLoupe && !vnode.state.mouseIsOver) {
+    return
+  }
   let canEdit = vnode.attrs.role === vnode.state.viewingPlayer
   let pixelMult = isLoupe ? 600/(LOUPE_VIEW_PAD*2+1) : PIXEL_DENSITY
   dx *= pixelMult
@@ -87,9 +89,18 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
     ctx.drawImage(
       vnode.state.imgCanvas,
       0-dx, 0-dy, pixelMult*vnode.state.imgCanvas.width, pixelMult*vnode.state.imgCanvas.height)
+    if (!isLoupe) {
+      if (!isLoupe && vnode.state.mouseIsOver) {
+        // fade background image if mouse is over image
+        ctx.lineWidth = 0
+        ctx.fillStyle = 'rgba(255,255,255,0.4)'
+        ctx.fillRect(0,0,vnode.state.canvas.width, vnode.state.canvas.height)
+      }
+    }
   }
   function drawRects (player, color) {
     function drawRect (x, y, w, h, id) {
+      ctx.lineWidth = isLoupe ? 8 : 2
       if (!isLoupe && id === vnode.state.closestRect && vnode.state.tool === 'erase' && player === vnode.attrs.game.role) {
         ctx.strokeStyle = COLORS.SELECTION
       } else {
@@ -116,7 +127,7 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   }
   function pixelHandler (color) {
     let drawnPixelWidth = isLoupe ? 1 : PIXEL_WIDTH
-    ctx.lineWidth = isLoupe ? 5 : 2
+    ctx.lineWidth = isLoupe ? 5 : 3
     ctx.strokeStyle = color
     return ({x,y}) => {
       if (vnode.state.imgCanvas) {
@@ -212,6 +223,7 @@ export default {
     vnode.state.currentRect = null
     vnode.state.rectEnd = null
     vnode.state.closestRect = null
+    vnode.state.mouseIsOver = false
   },
   oncreate: (vnode) => {
     vnode.state.canvas = document.getElementById('play')
@@ -243,6 +255,7 @@ export default {
       }
     }
     vnode.state.canvas.onmousemove = event => {
+      vnode.state.mouseIsOver = true
       let {x,y} = getMouseCoords(vnode, event)
       if (vnode.attrs.game.role !== 'judge') {
         vnode.state.closestRect = closestRect(vnode.attrs.game.rectangles(vnode.attrs.game.role), x, y)
@@ -256,6 +269,14 @@ export default {
         vnode.state.currentRect.y2 = y
         m.redraw()
       }
+    }
+    vnode.state.canvas.onmouseover = () => {
+      vnode.state.mouseIsOver = true
+      m.redraw()
+    }
+    vnode.state.canvas.onmouseout = () => {
+      vnode.state.mouseIsOver = false
+      m.redraw()
     }
     updateImage(vnode)
     updateCanvas(vnode)
