@@ -310,6 +310,10 @@ export default {
 
     return m('div', [
       m(ImageSelector, {game: vnode.attrs.game}),
+      vnode.attrs.role === 'judge' ? null : m('div', [
+        `Coin flip results: ${vnode.attrs.game.coinflipResult()}`,
+        m('button', {onclick: () => vnode.attrs.game.coinflip()}, 'Reroll')
+      ]),
       m('div', `You are ${vnode.attrs.role}. Your game code is ${vnode.attrs.game.code}`),
       playerbar,
       m('div', {style: 'position: relative; display: flex; align-items: flex-start;'}, [

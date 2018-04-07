@@ -78,7 +78,8 @@ function gameTemplate (gameNum = 0) {
     image: '',
     gameNum: gameNum,
     pixels: {red: {}, blue: {}},
-    players: {blue: 0, judge: 0, red: 0}
+    players: {blue: 0, judge: 0, red: 0},
+    coinflip: 0
   }
 }
 
@@ -165,18 +166,16 @@ export class Game {
   }
 
   // hash game code and state num to get who is the liar and who selects the image
-  _redIsLiar () {
-    let firstChar = md5(`${this.code} ${this.state?this.state.gameNum:'0'}`)[0]
+  coinflipResult () {
+    let firstChar = md5(`${this.code} ${this.state?this.state.gameNum:'0'} ${this.state.coinflip}`)[0]
     return ['0', '1', '2', '3', '4', '5', '6', '7', '8'].indexOf(firstChar) === -1
   }
 
-  isImageSelector () {
-    return this.role !== 'judge' && !this.isLiar()
-  }
-
-  isLiar () {
-    let redLies = this._redIsLiar()
-    return (redLies && this.role === 'red') || (!redLies && this.role === 'blue')
+  coinflip () {
+    return this.dbref.child('coinflip')
+      .transaction((oldNum) => {
+        return oldNum + 1
+      })
   }
 
   pixels (player) {

@@ -8,12 +8,7 @@ export default {
   },
   view: (vnode) => {
     let g = vnode.attrs.game
-    if (g.role === 'judge') {
-      return m('div', "Role: Judge")
-    }
-
     return m('div', [
-      g.isImageSelector() ? "Role: Honest" : "Role: Liar",
       m('form', {style: 'display: inline;'}, [
         m('input', {
           placeholder: 'New Image URL',
