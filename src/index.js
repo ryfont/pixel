@@ -19,7 +19,17 @@ const GamePage = {
   }
 }
 
+const RedirectToJudge = {
+  oninit: (vnode) => {
+    m.route.set('/game/:code/:role', {code: vnode.attrs.code, role: 'judge'}, {replace: true})
+  },
+  view: (vnode) => {
+    return m('div', 'Loading game...')
+  }
+}
+
 m.route(document.getElementById('page'), "/", {
     "/": GameSelectionPage,
+    "/game/:code": RedirectToJudge,
     "/game/:code/:role": GamePage,
 })

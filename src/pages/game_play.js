@@ -309,12 +309,16 @@ export default {
     }
 
     return m('div', [
-      m(ImageSelector, {game: vnode.attrs.game}),
       vnode.attrs.role === 'judge' ? null : m('div', [
-        `Coin flip results: ${vnode.attrs.game.coinflipResult()}`,
+        m(ImageSelector, {game: vnode.attrs.game}),
+        `Coin flip results: ${vnode.attrs.game.coinflipResult() ? 'heads' : 'tails'}`,
         m('button', {onclick: () => vnode.attrs.game.coinflip()}, 'Reroll')
       ]),
-      m('div', `You are ${vnode.attrs.role}. Your game code is ${vnode.attrs.game.code}`),
+      m('div', [
+        `You are ${vnode.attrs.role}. Send players to `,
+        m('a', {href: `#!/game/${vnode.attrs.game.code}`}, `#!/game/${vnode.attrs.game.code}`),
+        ` to join`
+      ]),
       playerbar,
       m('div', {style: 'position: relative; display: flex; align-items: flex-start;'}, [
         m('canvas#play', {style: 'box-shadow: 0px 0px 0px 1px #ccc; cursor: crosshair;'}),
