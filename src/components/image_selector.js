@@ -2,7 +2,7 @@ import m from 'mithril'
 
 function loadImages (vnode) {
   m.jsonp({
-    url: "http://api.flickr.com/services/feeds/photos_public.gne",
+    url: "https://api.flickr.com/services/feeds/photos_public.gne",
     data: {
       format: 'json'
     },
