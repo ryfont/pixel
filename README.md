@@ -4,8 +4,8 @@ Single pixel debate game
 ## Instructions
 
     npm install
-    npm run build
-    open build/index.html
+    npm run dev
+    open http://localhost:3000
 
 ## Deploying
 
