@@ -1,7 +1,7 @@
 import m from 'mithril'
 
 function loadImages (vnode) {
-  if (isUrl(vnode.state.searchText) || vnode.state.searchText.match('^ *$')) {
+  if (vnode.state.searchText && isUrl(vnode.state.searchText) || vnode.state.searchText.match('^ *$')) {
     return
   }
   m.jsonp({
@@ -51,6 +51,7 @@ function setImg (vnode, url) {
   vnode.attrs.game.setImageUrl(url)
     .then(() => {
       vnode.state.loading = false
+      vnode.state.searchText = ""
       vnode.state.error = null
       m.redraw()
     })
@@ -80,8 +81,13 @@ export default {
         libraryView = m('div', vnode.state.libraryData.map(imageUrl => {
           return m('a', {href: '#', onclick: (e) => {
             e.preventDefault()
-            vnode.state.showLibrary = false
-            setImg(vnode, imageUrl)
+            if (!vnode.state.loading) {
+              vnode.state.searchText = ""
+              vnode.state.error = null
+              vnode.state.libraryData = null
+              vnode.state.loading = true
+              setImg(vnode, imageUrl)
+            }
           }}, [
             m('img', {style: 'max-width: 100px; max-height: 100px;', src: imageUrl})
           ])
