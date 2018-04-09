@@ -1,21 +1,50 @@
 import m from 'mithril'
 
 function loadImages (vnode) {
+  if (isUrl(vnode.state.searchText) || vnode.state.searchText.match('^ *$')) {
+    return
+  }
   m.jsonp({
-    url: "https://api.flickr.com/services/feeds/photos_public.gne",
+    url: "https://www.flickr.com/services/rest",
     data: {
-      format: 'json'
+      format: 'json',
+      api_key: 'ba8a19a3cb594eacd876d73d36c531c4',
+      method: 'flickr.photos.search',
+      tags: vnode.state.searchText
     },
     callbackKey: "jsoncallback"
   })
   .then(function(result) {
     vnode.state.libraryData = []
-    while (result.items.length > 0 && vnode.state.libraryData.length < 16) {
-      let i = Math.floor(Math.random()*result.items.length)
-      let item = result.items.splice(i, 1)[0]
-      vnode.state.libraryData.push(item['media']['m'].replace("_m", "_b"))
+    if (!result.photos || !result.photos.photo) {
+      console.error('bad response from flickr server:', result)
+    }
+    let photos = Object.values(result.photos.photo)
+    while (photos.length > 0 && vnode.state.libraryData.length < 16) {
+      let i = Math.floor(Math.random()*photos.length)
+      let item = photos.splice(i, 1)[0]
+      vnode.state.libraryData.push(`https://farm${item.farm}.staticflickr.com/${item.server}/${item.id}_${item.secret}_b.jpg`)
     }
   })
+}
+
+function debounce (fn, time) {
+  let lastArgs = null
+  let isSet = false
+  return function() {
+    lastArgs = arguments
+    if (!isSet) {
+      isSet = true
+      setTimeout(() => {
+        fn.apply(null, lastArgs)
+        isSet = false
+      }, time)
+    }
+  }
+}
+
+function isUrl (str) {
+  return !!str.match(/^https?:\/\/(.+)\.(.+)/)
 }
 
 function setImg (vnode, url) {
@@ -35,17 +64,16 @@ function setImg (vnode, url) {
 export default {
   oninit: (vnode) => {
     vnode.state.loading = false
-    vnode.state.imageUrlText = ""
+    vnode.state.searchText = ""
     vnode.state.error = null
-    vnode.state.showLibrary = false
-    vnode.state.libraryLoaded = false
     vnode.state.libraryData = null
+    vnode.state.loadImagesDebounced = debounce(loadImages, 1000)
   },
   view: (vnode) => {
     let g = vnode.attrs.game
 
     let libraryView = null
-    if (vnode.state.showLibrary) {
+    if (vnode.state.libraryData !== null) {
       if (vnode.state.libraryData === null) {
         libraryView = m('div', 'Loading Flickr images...')
       } else {
@@ -64,29 +92,26 @@ export default {
     return m('div', [
       m('form', {style: 'display: inline;'}, [
         m('input', {
-          placeholder: 'Custom Image URL',
+          placeholder: 'Image Search (or Custom Image URL)',
+          size: 50,
           disabled: vnode.state.loading,
-          value: vnode.state.imageUrlText,
+          value: vnode.state.searchText,
           oninput: (e) => {
-            vnode.state.imageUrlText = e.target.value
+            vnode.state.searchText = e.target.value
+            vnode.state.error = null
+            vnode.state.libraryData = null
+            vnode.state.loadImagesDebounced(vnode)
           }
         }),
-        m('button', {
+        isUrl(vnode.state.searchText) ? m('button', {
           type: 'submit',
           disabled: vnode.state.loading,
           onclick: (e) => {
             e.preventDefault()
             vnode.state.loading = true
-            setImg(vnode, vnode.state.imageUrlText)
+            setImg(vnode, vnode.state.searchText)
           }
-        }, 'Update Image'),
-        m('button', {onclick: () => {
-          vnode.state.showLibrary = !vnode.state.showLibrary
-          if (vnode.state.libraryLoaded === false) {
-            vnode.state.libraryLoaded = true
-            loadImages(vnode)
-          }
-        }}, 'Show/hide image library'),
+        }, 'Set Image URL') : null,
         vnode.state.error ? m('span', vnode.state.error) : null,
         libraryView
       ])
