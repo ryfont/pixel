@@ -28,6 +28,7 @@ const RedirectToJudge = {
   }
 }
 
+m.route.prefix('')
 m.route(document.getElementById('page'), "/", {
     "/": GameSelectionPage,
     "/game/:code": RedirectToJudge,

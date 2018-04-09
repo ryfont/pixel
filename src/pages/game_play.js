@@ -337,7 +337,7 @@ export default {
       ]),
       m('div', [
         `You are ${vnode.attrs.role}. Send players to `,
-        m('a', {href: `#!/game/${vnode.attrs.game.code}`}, `#!/game/${vnode.attrs.game.code}`),
+        m('a', {href: `/game/${vnode.attrs.game.code}`}, `/game/${vnode.attrs.game.code}`),
         ` to join`
       ]),
       playerbar,

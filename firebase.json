@@ -1,6 +1,10 @@
 {
   "hosting": {
     "public": "build",
+    "rewrites": [ {
+      "source": "game/**",
+      "destination": "/index.html"
+    }],
     "ignore": [
       "firebase.json",
       "**/.*",
