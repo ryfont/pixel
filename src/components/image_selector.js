@@ -12,7 +12,8 @@ function loadImages (vnode) {
       method: 'flickr.photos.search',
       tags: vnode.state.searchText,
       content_type: 1,
-      license: '1,2,3,4,5,6,7,8,9,10'
+      license: '1,2,3,4,5,6,7,8,9,10',
+      extras: 'owner_name,url_m,url_l,url_t,path_alias'
     },
     callbackKey: "jsoncallback"
   })
@@ -26,7 +27,7 @@ function loadImages (vnode) {
     while (photos.length > 0 && vnode.state.libraryData.length < 16) {
       let i = Math.floor(Math.random()*photos.length)
       let item = photos.splice(i, 1)[0]
-      vnode.state.libraryData.push(`https://farm${item.farm}.staticflickr.com/${item.server}/${item.id}_${item.secret}_c.jpg`)
+      vnode.state.libraryData.push(item)
     }
   })
 }
@@ -50,8 +51,8 @@ function isUrl (str) {
   return !!str.match(/^https?:\/\/(.+)\.(.+)/)
 }
 
-function setImg (vnode, url) {
-  vnode.attrs.game.setImageUrl(url)
+function setImg (vnode, url, attribution={url:'', text:''}) {
+  vnode.attrs.game.setImageUrl(url, attribution)
     .then(() => {
       vnode.state.loading = false
       vnode.state.searchText = ""
@@ -81,7 +82,8 @@ export default {
       if (vnode.state.libraryData === null) {
         libraryView = m('div', 'Loading Flickr images...')
       } else {
-        libraryView = m('div', vnode.state.libraryData.map(imageUrl => {
+        libraryView = m('div', vnode.state.libraryData.map(flickrImg => {
+          let imageUrl = flickrImg.url_t
           return m('a', {href: '#', onclick: (e) => {
             e.preventDefault()
             if (!vnode.state.loading) {
@@ -89,7 +91,11 @@ export default {
               vnode.state.error = null
               vnode.state.libraryData = null
               vnode.state.loading = true
-              setImg(vnode, imageUrl)
+              let attribution = {
+                url: `https://www.flickr.com/photos/${flickrImg.pathalias||flickrImg.owner}/${flickrImg.id}`,
+                text: `Photo by ${flickrImg.ownername}`
+              }
+              setImg(vnode, flickrImg.url_l || flickrImg.url_m || flickrImg.url_t, attribution)
             }
           }}, [
             m('img', {style: 'max-width: 100px; max-height: 100px;', src: imageUrl})

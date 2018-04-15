@@ -329,6 +329,11 @@ export default {
       toolbar.push(m('span', `x1: ${Math.round(x1)} y1: ${Math.round(y1)}, x2: ${Math.round(x2)}, y2: ${Math.round(y2)}`))
     }
 
+    let attribution = null
+    if (vnode.attrs.game.attribution() && (vnode.attrs.game.role !== 'judge' || vnode.state.revealImage)) {
+      attribution = m('div', m('a', {href: vnode.attrs.game.attribution().url}, vnode.attrs.game.attribution().text))
+    }
+
     return m('div', [
       vnode.attrs.role === 'judge' ? null : m('div', [
         m(ImageSelector, {game: vnode.attrs.game}),
@@ -346,6 +351,7 @@ export default {
         m('canvas#loupe', {width: 600, height:600, style: 'width: 300px; height: 300px;'})
       ]),
       m('div', toolbar),
+      attribution
     ])
   }
 }

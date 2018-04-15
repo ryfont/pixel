@@ -76,6 +76,7 @@ function gameTemplate (gameNum = 0) {
   return {
     rectangles: {red: {}, blue: {}},
     image: '',
+    attribution: {url: '', text: ''},
     gameNum: gameNum,
     pixels: {red: {}, blue: {}},
     players: {blue: 0, judge: 0, red: 0},
@@ -208,11 +209,21 @@ export class Game {
     return resizedImage(this.imageUrl())
   }
 
-  setImageUrl (url) {
+  setImageUrl (url, attribution={url:'', text:''}) {
     return resizedImage(url)
       .then(() => {
         return this.dbref.child('image').set(url)
       })
+      .then(() => {
+        return this.dbref.child('attribution').set(attribution)
+      })
+  }
+
+  attribution () {
+    if (!this.state || !this.state.attribution || this.state.attribution.text.length===0) {
+      return null
+    }
+    return this.state.attribution
   }
 
   rectangles (player) {
