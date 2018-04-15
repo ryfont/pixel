@@ -10,12 +10,15 @@ function loadImages (vnode) {
       format: 'json',
       api_key: 'ba8a19a3cb594eacd876d73d36c531c4',
       method: 'flickr.photos.search',
-      tags: vnode.state.searchText
+      tags: vnode.state.searchText,
+      content_type: 1,
+      license: '1,2,3,4,5,6,7,8,9,10'
     },
     callbackKey: "jsoncallback"
   })
   .then(function(result) {
     vnode.state.libraryData = []
+    console.log(result)
     if (!result.photos || !result.photos.photo) {
       console.error('bad response from flickr server:', result)
     }
@@ -23,7 +26,7 @@ function loadImages (vnode) {
     while (photos.length > 0 && vnode.state.libraryData.length < 16) {
       let i = Math.floor(Math.random()*photos.length)
       let item = photos.splice(i, 1)[0]
-      vnode.state.libraryData.push(`https://farm${item.farm}.staticflickr.com/${item.server}/${item.id}_${item.secret}_b.jpg`)
+      vnode.state.libraryData.push(`https://farm${item.farm}.staticflickr.com/${item.server}/${item.id}_${item.secret}_c.jpg`)
     }
   })
 }
