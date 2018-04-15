@@ -79,7 +79,7 @@ function gameTemplate (gameNum = 0) {
     attribution: {url: '', text: ''},
     gameNum: gameNum,
     pixels: {red: {}, blue: {}},
-    players: {blue: 0, judge: 0, red: 0},
+    players: {blue: 0, red: 0},
     coinflip: 0
   }
 }
