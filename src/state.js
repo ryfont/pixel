@@ -123,6 +123,7 @@ export class Game {
     this.lastGameNum = null
     this.role = role // role of this player, either 'red' 'blue' 'judge'
     this.setRole = setRole
+    this.connected = true
     this.dbref = app.database().ref(`games/${gameId}`)
     this.dbref.on('value', snap => {
       this.state = snap.val()
@@ -133,6 +134,10 @@ export class Game {
         this.role = 'judge'
       }
       this.lastGameNum = this.state.gameNum
+    })
+    app.database().ref('.info/connected').on('value', (connectedSnap) => {
+      this.connected = connectedSnap.val()
+      this.onUpdates.forEach(f => { f() })
     })
   }
 

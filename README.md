@@ -12,27 +12,6 @@ Single pixel debate game
     npm run fb login
     npm run deploy
 
-## TODO
-
-- [ ] don't freeze on empty codes
-- [ ] eraser processes click events on invisible fill
-  - [ ] would be nice to indicate somehow what element is going to be deleted
-- [ ] indicate firebase connection status to user:
-- [ ] ask for confirmation when leaving game
-- [ ] deal with conflicts for player selection, and add validation to firebase schema
-
-```js
-firebaseRef.child('.info/connected').on('value', function(connectedSnap) {
-  if (connectedSnap.val() === true) {
-    /* we're connected! */
-  } else {
-    /* we're disconnected! */
-  }
-});
-```
-
-from https://stackoverflow.com/questions/11351689/detect-if-firebase-connection-is-lost-regained
-
 # Discussion
 
 (Copied over from the Google doc)

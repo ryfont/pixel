@@ -349,7 +349,8 @@ export default {
         m('canvas#loupe', {width: 600, height:600, style: 'width: 300px; height: 300px;'})
       ]),
       m('div', toolbar),
-      attribution
+      attribution,
+      vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
     ])
   }
 }
