@@ -245,9 +245,7 @@ export default {
     }
     vnode.state.canvas.onmouseup = event => {
       let {x,y} = getMouseCoords(vnode, event)
-      if (vnode.state.tool === 'pixel') {
-        vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
-      } else if (vnode.state.tool === 'rect' && vnode.state.currentRect !== null) {
+      if (vnode.state.tool === 'rect' && vnode.state.currentRect !== null) {
         let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
         vnode.attrs.game.addRectangle(x,y,w,h)
         vnode.state.currentRect = null
