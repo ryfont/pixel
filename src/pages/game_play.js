@@ -220,8 +220,8 @@ export default {
   oninit: (vnode) => {
     let reset = () => {
       vnode.state.tool = 'rect' // either 'rect', 'pixel', 'erase'
-      vnode.state.viewingPlayer = vnode.attrs.role === 'blue' ? 'blue' : 'red'
-      vnode.state.revealImage = vnode.attrs.role !== 'judge'
+      vnode.state.viewingPlayer = vnode.attrs.game.role === 'blue' ? 'blue' : 'red'
+      vnode.state.revealImage = vnode.attrs.game.role !== 'judge'
       vnode.state.mousePos = null
       vnode.state.lastImageUrl = ""
       vnode.state.imgCanvas = null
