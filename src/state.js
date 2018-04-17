@@ -149,7 +149,7 @@ export class Game {
   }
 
   onReset (f) {
-    this.onUpdates.push(f)
+    this.onResets.push(f)
     f()
   }
 
