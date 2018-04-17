@@ -38,7 +38,7 @@ function closestRect (rectangles, x, y) {
 }
 
 function shouldDisplayImage (vnode) {
-  return vnode.state.imgCanvas && ((vnode.attrs.game.role !== 'judge' && !vnode.state.altPressed) || vnode.state.revealImage)
+  return vnode.state.imgCanvas && vnode.state.revealImage
 }
 
 function manhattanDistToFilledRect (pointX, pointY, x, y, w, h) {
@@ -221,7 +221,7 @@ export default {
     let reset = () => {
       vnode.state.tool = 'rect' // either 'rect', 'pixel', 'erase'
       vnode.state.viewingPlayer = vnode.attrs.role === 'blue' ? 'blue' : 'red'
-      vnode.state.revealImage = false
+      vnode.state.revealImage = vnode.attrs.role !== 'judge'
       vnode.state.mousePos = null
       vnode.state.lastImageUrl = ""
       vnode.state.imgCanvas = null
@@ -229,25 +229,12 @@ export default {
       vnode.state.rectEnd = null
       vnode.state.closestRect = null
       vnode.state.mouseIsOver = false
-      vnode.state.altPressed = false
     }
     reset()
     vnode.attrs.game.onReset(reset)
   },
   oncreate: (vnode) => {
     vnode.state.canvas = document.getElementById('play')
-    window.onkeyup = (e) => {
-      if (e.keyCode === 18) {
-        vnode.state.altPressed = false
-        m.redraw()
-      }
-    }
-    window.onkeydown = (e) => {
-      if (e.keyCode === 18) {
-        vnode.state.altPressed = true
-        m.redraw()
-      }
-    }
     setCanvasSize(vnode.state.canvas, 500, 500)
     vnode.state.canvas.onmousedown = event => {
       if (vnode.attrs.game.role === 'judge') {
@@ -325,11 +312,11 @@ export default {
           vnode.attrs.game.becomeDebater().then(color => {
             if (color) {
               vnode.state.viewingPlayer = color
+              vnode.state.revealImage = true
             }
           })
         }}, 'Become Debater'))
       }
-      toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     } else {
       if (vnode.attrs.role === vnode.state.viewingPlayer) {
         toolbar = toolbar.concat([
@@ -338,6 +325,11 @@ export default {
           stateButton('tool', 'erase', 'Eraser'),
         ])
       }
+    }
+    if (vnode.state.revealImage) {
+      toolbar.push(stateButton('revealImage', false, 'Hide Image', !vnode.attrs.game.hasImage()))
+    } else {
+      toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     }
     toolbar.push(m('button', {onclick: () => {
       vnode.attrs.game.reset()
