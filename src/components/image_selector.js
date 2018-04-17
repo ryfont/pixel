@@ -105,7 +105,16 @@ export default {
     }
 
     return m('div', [
-      m('form', {style: 'display: inline;'}, [
+      m('form', {
+        style: 'display: inline;',
+        onsubmit: (e) => {
+          e.preventDefault()
+          if (isUrl(vnode.state.searchText)) {
+            vnode.state.loading = true
+            setImg(vnode, vnode.state.searchText)
+          }
+        }
+      }, [
         m('input', {
           placeholder: 'Image Search (or Custom Image URL)',
           size: 50,
@@ -120,12 +129,7 @@ export default {
         }),
         isUrl(vnode.state.searchText) ? m('button', {
           type: 'submit',
-          disabled: vnode.state.loading,
-          onclick: (e) => {
-            e.preventDefault()
-            vnode.state.loading = true
-            setImg(vnode, vnode.state.searchText)
-          }
+          disabled: vnode.state.loading
         }, 'Set Image URL') : null,
         vnode.state.error ? m('span', vnode.state.error) : null,
         libraryView
