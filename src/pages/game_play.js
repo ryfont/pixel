@@ -218,17 +218,21 @@ function updateCanvas (vnode) {
 
 export default {
   oninit: (vnode) => {
-    vnode.state.tool = 'rect' // either 'rect', 'pixel', 'erase'
-    vnode.state.viewingPlayer = vnode.attrs.role === 'blue' ? 'blue' : 'red'
-    vnode.state.revealImage = false
-    vnode.state.mousePos = null
-    vnode.state.lastImageUrl = ""
-    vnode.state.imgCanvas = null
-    vnode.state.currentRect = null
-    vnode.state.rectEnd = null
-    vnode.state.closestRect = null
-    vnode.state.mouseIsOver = false
-    vnode.state.altPressed = false
+    let reset = () => {
+      vnode.state.tool = 'rect' // either 'rect', 'pixel', 'erase'
+      vnode.state.viewingPlayer = vnode.attrs.role === 'blue' ? 'blue' : 'red'
+      vnode.state.revealImage = false
+      vnode.state.mousePos = null
+      vnode.state.lastImageUrl = ""
+      vnode.state.imgCanvas = null
+      vnode.state.currentRect = null
+      vnode.state.rectEnd = null
+      vnode.state.closestRect = null
+      vnode.state.mouseIsOver = false
+      vnode.state.altPressed = false
+    }
+    reset()
+    vnode.attrs.game.onReset(reset)
   },
   oncreate: (vnode) => {
     vnode.state.canvas = document.getElementById('play')

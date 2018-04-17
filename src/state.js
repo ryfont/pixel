@@ -118,6 +118,7 @@ export function freshNewGame () {
 export class Game {
   constructor (gameId, role, setRole) {
     this.onUpdates = []
+    this.onResets = []
     this.state = null
     this.code = gameId
     this.lastGameNum = null
@@ -132,6 +133,7 @@ export class Game {
         // game has been reset!
         this.setRole('judge')
         this.role = 'judge'
+        this.onResets.forEach(f => { f() })
       }
       this.lastGameNum = this.state.gameNum
     })
@@ -142,6 +144,11 @@ export class Game {
   }
 
   onUpdate (f) {
+    this.onUpdates.push(f)
+    f()
+  }
+
+  onReset (f) {
     this.onUpdates.push(f)
     f()
   }
