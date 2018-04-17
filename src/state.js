@@ -174,7 +174,7 @@ export class Game {
   // hash game code and state num to get who is the liar and who selects the image
   coinflipResult () {
     let firstChar = md5(`${this.code} ${this.state?this.state.gameNum:'0'} ${this.state.coinflip}`)[0]
-    return ['0', '1', '2', '3', '4', '5', '6', '7', '8'].indexOf(firstChar) === -1
+    return [['0', '1', '2', '3', '4', '5', '6', '7', '8'].indexOf(firstChar) === -1, firstChar]
   }
 
   coinflip () {

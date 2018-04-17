@@ -348,11 +348,25 @@ export default {
       attribution = m('div', m('a', {href: vnode.attrs.game.attribution().url}, vnode.attrs.game.attribution().text))
     }
 
+    let [coinResult, coinHash] = vnode.attrs.game.coinflipResult()
     return m('div', [
       vnode.attrs.role === 'judge' ? null : m('div', [
         m(ImageSelector, {game: vnode.attrs.game}),
-        `Coin flip results: ${vnode.attrs.game.coinflipResult() ? 'heads' : 'tails'}`,
-        m('button', {onclick: () => vnode.attrs.game.coinflip()}, 'Reroll')
+        "Coin flip: ",
+        m('button', {onclick: () => {
+          vnode.attrs.game.coinflip()
+        }}, 'Reroll'),
+        m('span.coinResults', {
+          oncreate: (vnode) => vnode.state.coinHash = coinHash,
+          onupdate: (vnode) => {
+            if (vnode.state.coinHash !== coinHash) {
+              vnode.state.coinHash = coinHash
+              vnode.dom.style.animation = 'none'
+              vnode.dom.offsetWidth // reflow
+              vnode.dom.style.animation = null
+            }
+          }
+        }, coinResult ? 'heads' : 'tails')
       ]),
       m('div', [
         `You are ${vnode.attrs.role}. Send players to `,
