@@ -37,6 +37,10 @@ function closestRect (rectangles, x, y) {
   return best
 }
 
+function shouldDisplayImage (vnode) {
+  return vnode.state.imgCanvas && ((vnode.attrs.game.role !== 'judge' && !vnode.state.altPressed) || vnode.state.revealImage)
+}
+
 function manhattanDistToFilledRect (pointX, pointY, x, y, w, h) {
   let totalDist = 0
   if (pointX < x) {
@@ -85,7 +89,7 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
     dx -= LOUPE_VIEW_PAD*pixelMult
     dy -= LOUPE_VIEW_PAD*pixelMult
   }
-  if (vnode.state.imgCanvas && (vnode.attrs.game.role !== 'judge' || vnode.state.revealImage)) {
+  if (shouldDisplayImage(vnode)) {
     ctx.drawImage(
       vnode.state.imgCanvas,
       0-dx, 0-dy, pixelMult*vnode.state.imgCanvas.width, pixelMult*vnode.state.imgCanvas.height)
@@ -224,10 +228,22 @@ export default {
     vnode.state.rectEnd = null
     vnode.state.closestRect = null
     vnode.state.mouseIsOver = false
+    vnode.state.altPressed = false
   },
   oncreate: (vnode) => {
     vnode.state.canvas = document.getElementById('play')
-    vnode.state.canvas
+    window.onkeyup = (e) => {
+      if (e.keyCode === 18) {
+        vnode.state.altPressed = false
+        m.redraw()
+      }
+    }
+    window.onkeydown = (e) => {
+      if (e.keyCode === 18) {
+        vnode.state.altPressed = true
+        m.redraw()
+      }
+    }
     setCanvasSize(vnode.state.canvas, 500, 500)
     vnode.state.canvas.onmousedown = event => {
       if (vnode.attrs.game.role === 'judge') {
@@ -328,7 +344,7 @@ export default {
     }
 
     let attribution = null
-    if (vnode.attrs.game.attribution() && (vnode.attrs.game.role !== 'judge' || vnode.state.revealImage)) {
+    if (vnode.attrs.game.attribution() && shouldDisplayImage(vnode)) {
       attribution = m('div', m('a', {href: vnode.attrs.game.attribution().url}, vnode.attrs.game.attribution().text))
     }
 
