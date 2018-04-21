@@ -18,7 +18,7 @@ body {
 }
 
 .wrap {
-  max-width: 850px;
+  max-width: 959px;
   margin: 0 auto;
   padding: 60px;
 }
@@ -61,6 +61,9 @@ button {
 button:focus {
   outline: none;
   box-shadow: 0px 0px 0px 2px #E4C7EE;
+}
+button.selected {
+  background-color: #562F5F;
 }
 hr {
   background-color: #d4cbd6;

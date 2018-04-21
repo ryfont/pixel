@@ -3,12 +3,12 @@ import ImageSelector from '../components/image_selector'
 import {description} from '../components/description'
 
 const COLORS = {
-  RED: 'rgba(239, 65, 70, 0.9)',
-  BLUE: 'rgba(84, 54, 218, 0.9)',
+  RED: 'rgba(239, 65, 70, 0.5)',
+  BLUE: 'rgba(84, 54, 218, 0.5)',
   RED_FULL: 'rgba(239, 65, 70, 1)',
   BLUE_FULL: 'rgba(84, 54, 218, 1)',
-  RED_FADED: 'rgba(239, 65, 70, 0.2)',
-  BLUE_FADED: 'rgba(84, 54, 218, 0.2)',
+  RED_FADED: 'rgba(239, 65, 70, 0.1)',
+  BLUE_FADED: 'rgba(84, 54, 218, 0.1)',
   SELECTION: 'rgba(157, 35, 220, 0.9)'
 }
 
@@ -23,9 +23,10 @@ function capitalize (str) {
 
 // returns clicked rect at x, y
 // return null if no rect within +- 10 pixels of clicked point
+// also always counts rects no matter how far border is if cursor is inside bounds
 function closestRect (rectangles, x, y) {
   let best = null
-  let bestDist = ERASER_SIZE
+  let bestDist = null
   Object.keys(rectangles).forEach(rectId => {
     let rect = rectangles[rectId]
     let overallDist = Math.min(
@@ -34,7 +35,8 @@ function closestRect (rectangles, x, y) {
       manhattanDistToFilledRect(x, y, rect.x+rect.w, rect.y, 1, rect.h),
       manhattanDistToFilledRect(x, y, rect.x, rect.y+rect.h, rect.w, 1)
     )
-    if (overallDist < bestDist) {
+    let validRect = overallDist < ERASER_SIZE || (x>=rect.x && y>=rect.y && x<rect.x+rect.w && y<rect.y+rect.h)
+    if ((bestDist===null || overallDist < bestDist) && validRect) {
       bestDist = overallDist
       best = rectId
     }
@@ -83,6 +85,8 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   let ctx = canvas.getContext('2d')
   ctx.imageSmoothingEnabled = false
   ctx.clearRect(0, 0, 500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
+  ctx.fillStyle = "#fff"
+  ctx.fillRect(0,0,500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
   if (isLoupe && !vnode.state.mouseIsOver) {
     return
   }
@@ -109,13 +113,13 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   }
   function drawRects (player, color) {
     function drawRect (x, y, w, h, id) {
-      ctx.lineWidth = isLoupe ? 8 : 2
+      ctx.lineWidth = 0
       if (!isLoupe && id === vnode.state.closestRect && vnode.state.tool === 'erase' && player === vnode.attrs.game.role) {
-        ctx.strokeStyle = COLORS.SELECTION
+        ctx.fillStyle = COLORS.SELECTION
       } else {
-        ctx.strokeStyle = color
+        ctx.fillStyle = color
       }
-      ctx.strokeRect((x+.5)*pixelMult-dx, (y+.5)*pixelMult-dy, w*pixelMult, h*pixelMult)
+      ctx.fillRect((x+.5)*pixelMult-dx, (y+.5)*pixelMult-dy, w*pixelMult, h*pixelMult)
     }
     let rectangles = game.rectangles(player)
     Object.keys(rectangles).forEach(rectId => {
@@ -164,27 +168,37 @@ function updateLoupe (vnode, pos) {
     pos = vnode.state.mousePos
   }
   vnode.state.mousePos = pos
-  if (pos === null) {
-    return
+  if (pos !== null && vnode.state.mouseIsOver) {
+    let x = Math.round(pos.x)
+    let y = Math.round(pos.y)
+    drawGame(vnode, loupeCanvas, true, x, y)
+  } else {
+    loupeCtx.fillStyle = "#fff"
+    loupeCtx.fillRect(0,0,600,600)
   }
-  let x = Math.round(pos.x)
-  let y = Math.round(pos.y)
-  drawGame(vnode, loupeCanvas, true, x, y)
-  loupeCtx.lineWidth = 1
-  loupeCtx.strokeStyle = '#333'
-  loupeCtx.beginPath()
-  loupeCtx.moveTo(0, 300)
-  loupeCtx.lineTo(600, 300)
-  loupeCtx.moveTo(300, 0)
-  loupeCtx.lineTo(300, 600)
-  loupeCtx.stroke()
-  loupeCtx.strokeStyle = '#ccc'
+  loupeCtx.setLineDash([12,12.5])
+  loupeCtx.lineWidth = 2
+  loupeCtx.strokeStyle = 'rgba(0,0,0,0.3)'
   loupeCtx.beginPath()
   loupeCtx.moveTo(0, 301)
   loupeCtx.lineTo(600, 301)
   loupeCtx.moveTo(301, 0)
   loupeCtx.lineTo(301, 600)
   loupeCtx.stroke()
+  loupeCtx.beginPath()
+  loupeCtx.moveTo(0, 299)
+  loupeCtx.lineTo(600, 299)
+  loupeCtx.moveTo(299, 0)
+  loupeCtx.lineTo(299, 600)
+  loupeCtx.stroke()
+  loupeCtx.strokeStyle = '#C5C5D2'
+  loupeCtx.beginPath()
+  loupeCtx.moveTo(0, 300)
+  loupeCtx.lineTo(600, 300)
+  loupeCtx.moveTo(300, 0)
+  loupeCtx.lineTo(300, 600)
+  loupeCtx.stroke()
+  loupeCtx.setLineDash([])
 }
 
 function updateImage (vnode) {
@@ -286,10 +300,12 @@ export default {
     }
     vnode.state.canvas.onmouseout = () => {
       vnode.state.mouseIsOver = false
+      vnode.state.closestRect = null
       m.redraw()
     }
     updateImage(vnode)
     updateCanvas(vnode)
+    updateLoupe(vnode, null)
   },
   onupdate: (vnode) => {
     updateImage(vnode)
@@ -298,7 +314,7 @@ export default {
   view: (vnode) => {
     const stateButton = (type, name, label, disable=false) => {
       return m('button', {
-        disabled: vnode.state[type] === name || disable,
+        class: (vnode.state[type] === name || disable) ? "selected" : "",
         onclick: () => {vnode.state[type] = name}
       }, label)
     }
@@ -309,22 +325,17 @@ export default {
     ])
 
     let toolbar = []
-    if (vnode.attrs.role === 'judge') {
-    } else {
-    }
     if (vnode.state.revealImage) {
       toolbar.push(stateButton('revealImage', false, 'Hide Image', !vnode.attrs.game.hasImage()))
+      if (vnode.attrs.game.attribution()) {
+        toolbar.push(m('a', {href: vnode.attrs.game.attribution().url}, vnode.attrs.game.attribution().text))
+      }
     } else {
       toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     }
     if (vnode.state.currentRect) {
       let {x1,y1,x2,y2} = vnode.state.currentRect
       toolbar.push(m('span', `x1: ${Math.round(x1)} y1: ${Math.round(y1)}, x2: ${Math.round(x2)}, y2: ${Math.round(y2)}`))
-    }
-
-    let attribution = null
-    if (vnode.attrs.game.attribution() && shouldDisplayImage(vnode)) {
-      attribution = m('div', m('a', {href: vnode.attrs.game.attribution().url}, vnode.attrs.game.attribution().text))
     }
 
     let [coinResult, coinHash] = vnode.attrs.game.coinflipResult()
@@ -402,14 +413,14 @@ export default {
             m(ImageSelector, {game: vnode.attrs.game}),
           ]),
           playerbar,
-          m('div', {style: 'position: relative; display: flex; align-items: flex-start;'}, [
-            m('canvas#play', {style: 'box-shadow: 0px 0px 0px 1px #ccc; cursor: crosshair;'}),
-            m('canvas#loupe', {width: 600, height:600, style: 'width: 300px; height: 300px;'})
-          ]),
-          m('div', toolbar),
+          m('canvas#play', {style: 'box-shadow: 0px 0px 0px 1px #ccc; cursor: crosshair;'}),
+          m('.row.gap-2.middle', toolbar),
+        ]),
+        m('.col.gap-3', [
+          m('h2', 'Zoom'),
+          m('canvas#loupe', {width: 600, height:600, style: 'width: 250px; height: 250px;'}),
         ])
       ]),
-      attribution,
       vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
     ])
   }
