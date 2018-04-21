@@ -1,13 +1,14 @@
 import m from 'mithril'
 import ImageSelector from '../components/image_selector'
+import {description} from '../components/description'
 
 const COLORS = {
-  RED: 'rgba(211, 49, 89, 0.9)',
-  BLUE: 'rgba(49, 135, 211, 0.9)',
-  RED_FULL: 'rgba(211, 49, 89, 1)',
-  BLUE_FULL: 'rgba(49, 135, 211, 1)',
-  RED_FADED: 'rgba(211, 49, 89, 0.2)',
-  BLUE_FADED: 'rgba(49, 135, 211, 0.2)',
+  RED: 'rgba(239, 65, 70, 0.9)',
+  BLUE: 'rgba(84, 54, 218, 0.9)',
+  RED_FULL: 'rgba(239, 65, 70, 1)',
+  BLUE_FULL: 'rgba(84, 54, 218, 1)',
+  RED_FADED: 'rgba(239, 65, 70, 0.2)',
+  BLUE_FADED: 'rgba(84, 54, 218, 0.2)',
   SELECTION: 'rgba(157, 35, 220, 0.9)'
 }
 
@@ -15,6 +16,10 @@ const PIXEL_WIDTH = 9
 const LOUPE_VIEW_PAD = 14
 const PIXEL_DENSITY = 2
 const ERASER_SIZE = 10
+
+function capitalize (str) {
+  return str[0].toUpperCase() + str.slice(1)
+}
 
 // returns clicked rect at x, y
 // return null if no rect within +- 10 pixels of clicked point
@@ -305,35 +310,13 @@ export default {
 
     let toolbar = []
     if (vnode.attrs.role === 'judge') {
-      if (vnode.attrs.game.isFull()) {
-        toolbar.push(m('button', {disabled: true}, 'Already have 2 debaters'))
-      } else {
-        toolbar.push(m('button', {onclick: () => {
-          vnode.attrs.game.becomeDebater().then(color => {
-            if (color) {
-              vnode.state.viewingPlayer = color
-              vnode.state.revealImage = true
-            }
-          })
-        }}, 'Become Debater'))
-      }
     } else {
-      if (vnode.attrs.role === vnode.state.viewingPlayer) {
-        toolbar = toolbar.concat([
-          stateButton('tool', 'rect', 'Rectangle Tool'),
-          stateButton('tool', 'pixel', 'Pixel Reveal Tool'),
-          stateButton('tool', 'erase', 'Eraser'),
-        ])
-      }
     }
     if (vnode.state.revealImage) {
       toolbar.push(stateButton('revealImage', false, 'Hide Image', !vnode.attrs.game.hasImage()))
     } else {
       toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     }
-    toolbar.push(m('button', {onclick: () => {
-      vnode.attrs.game.reset()
-    }}, 'Reset Board + Roles'))
     if (vnode.state.currentRect) {
       let {x1,y1,x2,y2} = vnode.state.currentRect
       toolbar.push(m('span', `x1: ${Math.round(x1)} y1: ${Math.round(y1)}, x2: ${Math.round(x2)}, y2: ${Math.round(y2)}`))
@@ -345,36 +328,87 @@ export default {
     }
 
     let [coinResult, coinHash] = vnode.attrs.game.coinflipResult()
-    return m('div', [
-      vnode.attrs.role === 'judge' ? null : m('div', [
-        m(ImageSelector, {game: vnode.attrs.game}),
-        "Coin flip: ",
-        m('button', {onclick: () => {
-          vnode.attrs.game.coinflip()
-        }}, 'Reroll'),
-        m('span.coinResults', {
-          oncreate: (vnode) => vnode.state.coinHash = coinHash,
-          onupdate: (vnode) => {
-            if (vnode.state.coinHash !== coinHash) {
-              vnode.state.coinHash = coinHash
-              vnode.dom.style.animation = 'none'
-              vnode.dom.offsetWidth // reflow
-              vnode.dom.style.animation = null
+
+    let roleSection = []
+    let coinSection = null
+    if (vnode.attrs.game.role === 'judge') {
+      roleSection.push(m('.role-judge', 'Judge'))
+      if (vnode.attrs.game.isFull()) {
+        roleSection.push(m('.hint', {disabled: true}, 'Looks like this game already has two debaters.'))
+      } else {
+        roleSection.push(m('button', {onclick: () => {
+          vnode.attrs.game.becomeDebater().then(color => {
+            if (color) {
+              vnode.state.viewingPlayer = color
+              vnode.state.revealImage = true
             }
-          }
-        }, coinResult ? 'heads' : 'tails')
+          })
+        }}, 'Become a Debater'))
+      }
+    } else {
+      let roleName = capitalize(vnode.attrs.game.role)
+      roleSection.push(m(`.role-${vnode.attrs.game.role}`, `${roleName} Player`))
+      if (vnode.attrs.role === vnode.state.viewingPlayer) {
+        roleSection = roleSection.concat([
+          stateButton('tool', 'rect', 'Rectangle Tool'),
+          stateButton('tool', 'pixel', 'Pixel Reveal Tool'),
+          stateButton('tool', 'erase', 'Eraser'),
+        ])
+      }
+    }
+    return m('.col.gap-4.justify', [
+      description(),
+      m('hr'),
+      m('.row.gap-4', [
+        m('.tools.col.gap-3', [
+          m('.col.gap-1.justify', [
+            m('h2', 'Game Link'),
+            m('a', {href: `/game/${vnode.attrs.game.code}`}, `/game/${vnode.attrs.game.code}`),
+            m('p.hint', 'Copy, paste, and send link to invite others to join this game.')
+          ]),
+          m('hr'),
+          m('.col.gap-1.justify', [
+            m('h2', 'Current Role'),
+            roleSection,
+          ]),
+          vnode.attrs.game.role === 'judge' ? null : [
+            m('hr'),
+            m('.col.gap-1.justify', [
+              m('h2', 'Coin Flip'),
+              m('span.coinResults', {
+                oncreate: (vnode) => vnode.state.coinHash = coinHash,
+                onupdate: (vnode) => {
+                  if (vnode.state.coinHash !== coinHash) {
+                    vnode.state.coinHash = coinHash
+                    vnode.dom.style.animation = 'none'
+                    vnode.dom.offsetWidth // reflow
+                    vnode.dom.style.animation = null
+                  }
+                }
+              }, coinResult ? 'Heads' : 'Tails'),
+              m('button', {onclick: () => {
+                vnode.attrs.game.coinflip()
+              }}, 'Flip Coin'),
+              m('p.hint', 'Only debaters can see the result of coin flips.')
+            ])
+          ],
+          m('hr'),
+          m('button', {onclick: () => {
+            vnode.attrs.game.reset()
+          }}, 'Reset Board & Roles')
+        ]),
+        m('div', [
+          vnode.attrs.role === 'judge' ? null : m('div', [
+            m(ImageSelector, {game: vnode.attrs.game}),
+          ]),
+          playerbar,
+          m('div', {style: 'position: relative; display: flex; align-items: flex-start;'}, [
+            m('canvas#play', {style: 'box-shadow: 0px 0px 0px 1px #ccc; cursor: crosshair;'}),
+            m('canvas#loupe', {width: 600, height:600, style: 'width: 300px; height: 300px;'})
+          ]),
+          m('div', toolbar),
+        ])
       ]),
-      m('div', [
-        `You are ${vnode.attrs.role}. Send players to `,
-        m('a', {href: `/game/${vnode.attrs.game.code}`}, `/game/${vnode.attrs.game.code}`),
-        ` to join`
-      ]),
-      playerbar,
-      m('div', {style: 'position: relative; display: flex; align-items: flex-start;'}, [
-        m('canvas#play', {style: 'box-shadow: 0px 0px 0px 1px #ccc; cursor: crosshair;'}),
-        m('canvas#loupe', {width: 600, height:600, style: 'width: 300px; height: 300px;'})
-      ]),
-      m('div', toolbar),
       attribution,
       vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
     ])

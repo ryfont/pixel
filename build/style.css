@@ -1,0 +1,90 @@
+html {
+  font-size: 18px;
+  color: #562F5F;
+  padding: 0;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  background-color: #EEEAEE;
+  font-family: Colfax;
+}
+.coinResults {
+  animation: 1s reveal;
+}
+@keyframes reveal {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.wrap {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 60px;
+}
+
+h1, h2, p, a {
+  margin: 0;
+}
+h1 {
+  font-size: 1.3rem;
+}
+h2 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #000;
+  letter-spacing: 2px;
+}
+p {
+  max-width: 560px;
+  line-height: 1.5;
+}
+.hint {
+  color: #88809f;
+  font-size: 0.7rem;
+}
+a {
+  color: #5436DA;
+}
+button {
+  border-radius: 6px;
+  background-color: #9C88A3;
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  font-size: 0.7rem;
+  padding: 10px 9px 8px 9px;
+  text-align: center;
+  line-height: 1;
+  cursor: pointer;
+}
+button:focus {
+  outline: none;
+  box-shadow: 0px 0px 0px 2px #E4C7EE;
+}
+hr {
+  background-color: #d4cbd6;
+  border: none;
+  border-bottom: 1px solid #d4cbd6;
+  height: 0px;
+  width: 100%;
+  margin: 0;
+}
+
+.tools {
+  width: 150px;
+  flex-shrink: 0;
+}
+.role-judge {
+  color: #000;
+}
+.role-red {
+  color: #EF4146;
+  font-weight: bold;
+}
+.role-blue {
+  color: #5436DA;
+  font-weight: bold;
+}
+
+

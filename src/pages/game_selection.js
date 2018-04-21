@@ -1,5 +1,6 @@
 import m from 'mithril'
 import {freshNewGame, gameExists} from '../state'
+import {description} from '../components/description'
 
 export default {
   oninit: (vnode) => {
@@ -9,6 +10,7 @@ export default {
   },
   view: (vnode) => {
     return m('div', [
+      description(),
       m('button', {
         disabled: vnode.state.loading,
         onclick: () => {

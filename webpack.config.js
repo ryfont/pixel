@@ -9,8 +9,9 @@ module.exports = {
   },
   devServer: {
     port: 3000,
+    contentBase: path.join(__dirname, "build"),
     historyApiFallback: {
-      index: 'build/index.html'
+      index: '/index.html'
     }
   }
 }
