@@ -57,6 +57,7 @@ function setImg (vnode, url, attribution={url:'', text:''}) {
       vnode.state.loading = false
       vnode.state.searchText = ""
       vnode.state.error = null
+      vnode.attrs.close()
       m.redraw()
     })
     .catch((e) => {
@@ -84,7 +85,7 @@ export default {
       } else {
         libraryView = m('div', vnode.state.libraryData.map(flickrImg => {
           let imageUrl = flickrImg.url_t
-          return m('a', {href: '#', onclick: (e) => {
+          return m('a.library-image.center.middle', {href: '#', onclick: (e) => {
             e.preventDefault()
             if (!vnode.state.loading) {
               vnode.state.searchText = ""
@@ -98,40 +99,46 @@ export default {
               setImg(vnode, flickrImg.url_l || flickrImg.url_m || flickrImg.url_t, attribution)
             }
           }}, [
-            m('img', {style: 'max-width: 100px; max-height: 100px;', src: imageUrl})
+            m('img', {src: imageUrl})
           ])
         }))
       }
     }
 
-    return m('div', [
-      m('form', {
-        style: 'display: inline;',
-        onsubmit: (e) => {
-          e.preventDefault()
-          if (isUrl(vnode.state.searchText)) {
-            vnode.state.loading = true
-            setImg(vnode, vnode.state.searchText)
+    return m('.modal-bg.center.top', {onclick: vnode.attrs.close}, [
+      m('.modal.col.gap-2.left', {onclick: (e) => e.stopPropagation()}, [
+        m('p', m('strong', 'Select an Image')),
+        m('p', 'Search for an image or provide a URL to a custom image.'),
+        m('form.col.justify', {
+          style: 'display: inline; width:100%;',
+          onsubmit: (e) => {
+            e.preventDefault()
+            if (isUrl(vnode.state.searchText)) {
+              vnode.state.loading = true
+              setImg(vnode, vnode.state.searchText)
+            }
           }
-        }
-      }, [
-        m('input', {
-          placeholder: 'Image Search (or Custom Image URL)',
-          size: 50,
-          disabled: vnode.state.loading,
-          value: vnode.state.searchText,
-          oninput: (e) => {
-            vnode.state.searchText = e.target.value
-            vnode.state.error = null
-            vnode.state.libraryData = null
-            vnode.state.loadImagesDebounced(vnode)
-          }
-        }),
+        }, [
+          m('input', {
+            style: 'width: 100%; box-sizing: border-box;',
+            type: 'text',
+            placeholder: 'Search (or Custom Image URL)',
+            size: 50,
+            disabled: vnode.state.loading,
+            value: vnode.state.searchText,
+            oninput: (e) => {
+              vnode.state.searchText = e.target.value
+              vnode.state.error = null
+              vnode.state.libraryData = null
+              vnode.state.loadImagesDebounced(vnode)
+            }
+          }),
+          vnode.state.error ? m('span', vnode.state.error) : null,
+        ]),
         isUrl(vnode.state.searchText) ? m('button', {
           type: 'submit',
           disabled: vnode.state.loading
         }, 'Set Image URL') : null,
-        vnode.state.error ? m('span', vnode.state.error) : null,
         libraryView
       ])
     ])

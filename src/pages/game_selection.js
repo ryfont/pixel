@@ -9,7 +9,7 @@ export default {
     vnode.state.error = null
   },
   view: (vnode) => {
-    return m('div', [
+    return m('div.col.gap-3.left', [
       description(),
       m('button', {
         disabled: vnode.state.loading,
