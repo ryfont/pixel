@@ -65,6 +65,9 @@ button:focus {
 button.selected {
   background-color: #562F5F;
 }
+button:disabled {
+  background-color: #ccc;
+}
 hr {
   background-color: #d4cbd6;
   border: none;
@@ -88,6 +91,9 @@ hr {
 .role-blue {
   color: #5436DA;
   font-weight: bold;
+}
+.coord {
+  width: 50px;
 }
 
 

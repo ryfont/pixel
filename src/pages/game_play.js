@@ -291,8 +291,8 @@ export default {
       if (vnode.state.currentRect) {
         vnode.state.currentRect.x2 = x
         vnode.state.currentRect.y2 = y
-        m.redraw()
       }
+      m.redraw()
     }
     vnode.state.canvas.onmouseover = () => {
       vnode.state.mouseIsOver = true
@@ -314,7 +314,8 @@ export default {
   view: (vnode) => {
     const stateButton = (type, name, label, disable=false) => {
       return m('button', {
-        class: (vnode.state[type] === name || disable) ? "selected" : "",
+        class: vnode.state[type] === name ? "selected" : "",
+        disabled: disable,
         onclick: () => {vnode.state[type] = name}
       }, label)
     }
@@ -333,9 +334,24 @@ export default {
     } else {
       toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     }
-    if (vnode.state.currentRect) {
-      let {x1,y1,x2,y2} = vnode.state.currentRect
-      toolbar.push(m('span', `x1: ${Math.round(x1)} y1: ${Math.round(y1)}, x2: ${Math.round(x2)}, y2: ${Math.round(y2)}`))
+    let rectCoordsView = null
+    console.log(vnode.state.mouseIsOver, vnode.state.mousePos)
+    if (vnode.state.mouseIsOver && vnode.state.mousePos) {
+      if (vnode.state.currentRect) {
+        let {x1,y1,x2,y2} = vnode.state.currentRect
+        rectCoordsView = m('.hint.row', [
+          m('.coord', {style: 'width:50px;'}, `x1: ${Math.round(x1)}`),
+          m('.coord', {style: 'width:50px;'}, `y1: ${Math.round(y1)}`),
+          m('.coord', {style: 'width:50px;'}, `x2: ${Math.round(x2)}`),
+          m('.coord', {style: 'width:50px;'}, `y2: ${Math.round(y2)}`),
+        ])
+      } else {
+        let {x,y} = vnode.state.mousePos
+        rectCoordsView = m('.hint.row', [
+          m('.coord', {style: 'width:50px;'}, `x: ${Math.round(x)}`),
+          m('.coord', {style: 'width:50px;'}, `y: ${Math.round(y)}`),
+        ])
+      }
     }
 
     let [coinResult, coinHash] = vnode.attrs.game.coinflipResult()
@@ -419,6 +435,7 @@ export default {
         m('.col.gap-3', [
           m('h2', 'Zoom'),
           m('canvas#loupe', {width: 600, height:600, style: 'width: 250px; height: 250px;'}),
+          rectCoordsView
         ])
       ]),
       vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
