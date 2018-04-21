@@ -335,7 +335,6 @@ export default {
       toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     }
     let rectCoordsView = null
-    console.log(vnode.state.mouseIsOver, vnode.state.mousePos)
     if (vnode.state.mouseIsOver && vnode.state.mousePos) {
       if (vnode.state.currentRect) {
         let {x1,y1,x2,y2} = vnode.state.currentRect
