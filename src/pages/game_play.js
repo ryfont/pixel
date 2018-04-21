@@ -313,17 +313,17 @@ export default {
     updateCanvas(vnode)
   },
   view: (vnode) => {
-    const stateButton = (type, name, label, disable=false) => {
+    const stateButton = (type, name, label, disable=false, custom_class="") => {
       return m('button', {
-        class: vnode.state[type] === name ? "selected" : "",
+        class: custom_class + (vnode.state[type] === name ? " selected" : ""),
         disabled: disable,
         onclick: () => {vnode.state[type] = name}
       }, label)
     }
 
     let playerbar = m('.row.gap-2', [
-      stateButton('viewingPlayer', 'red', vnode.attrs.role === 'red' ? 'Your Drawing' : "Red's Drawing"),
-      stateButton('viewingPlayer', 'blue', vnode.attrs.role === 'blue' ? 'Your Drawing' : "Blue's Drawing"),
+      stateButton('viewingPlayer', 'red', vnode.attrs.role === 'red' ? 'Your Drawing' : "Red's Drawing", false, "tab-red"),
+      stateButton('viewingPlayer', 'blue', vnode.attrs.role === 'blue' ? 'Your Drawing' : "Blue's Drawing", false, "tab-blue"),
     ])
 
     let toolbar = []
@@ -430,8 +430,8 @@ export default {
           ]),
           m('div', [
             playerbar,
-            m('div', {style: 'position: relative;'}, [
-              m('canvas#play', {style: 'box-shadow: 0px 0px 0px 1px #ccc; cursor: crosshair;'}),
+            m('.play-wrap', {style: `border-color: ${vnode.state.viewingPlayer==='red'?'#EF4146':'#5436DA'}`}, [
+              m('canvas#play', {style: 'cursor: crosshair;'}),
               imageSelectorButton
             ]),
             m('.row.gap-2.middle', toolbar),
