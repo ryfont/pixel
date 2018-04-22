@@ -326,6 +326,7 @@ export default {
       m.redraw()
     }
     let ontouch = (e) => {
+      e.preventDefault()
       vnode.state.touchMode = true
       vnode.state.mouseIsOver = false
       let {x,y} = getMouseCoords(vnode.state.canvas, e)
@@ -334,12 +335,6 @@ export default {
     }
     vnode.state.canvas.ontouchstart = ontouch
     vnode.state.canvas.ontouchmove = ontouch
-    vnode.state.canvas.ontouchend = (e) => {
-      // prevent mouse events from firing
-      if (e.cancelable) {
-        e.preventDefault()
-      }
-    }
     vnode.state.loupe.ontouchstart = (e) => {
       vnode.state.touchMode = true
       e.preventDefault()
@@ -429,12 +424,32 @@ export default {
     } else {
       let roleName = capitalize(vnode.attrs.game.role)
       roleSection.push(m(`.role-${vnode.attrs.game.role}`, `${roleName} Player`))
-      let canDraw = vnode.attrs.role === vnode.state.viewingPlayer
-      roleSection = roleSection.concat([
-        stateButton('tool', 'rect', 'Rectangle Tool', !canDraw),
-        stateButton('tool', 'pixel', 'Pixel Reveal Tool', !canDraw),
-        stateButton('tool', 'erase', 'Eraser', !canDraw),
-      ])
+      if (vnode.state.touchMode && vnode.state.currentRect) {
+        roleSection = roleSection.concat([
+          m('button', {onclick: () => {
+            console.log("TODO END RECTANGLE")
+          }}, 'End Rectangle')
+        ])
+      } else if (vnode.state.touchMode) {
+        roleSection = roleSection.concat([
+          m('button', {onclick: ()=>{
+            console.log("TODO")
+          }}, 'Start Rectangle'),
+          m('button', {onclick: ()=>{
+            console.log("TODO")
+          }}, 'Reveal Pixel'),
+          m('button', {disabled: !vnode.state.closestRect, onclick: ()=>{
+            console.log("TODO")
+          }}, 'Erase')
+        ])
+      } else {
+        let canDraw = vnode.attrs.role === vnode.state.viewingPlayer
+        roleSection = roleSection.concat([
+          stateButton('tool', 'rect', 'Rectangle Tool', !canDraw),
+          stateButton('tool', 'pixel', 'Pixel Reveal Tool', !canDraw),
+          stateButton('tool', 'erase', 'Eraser', !canDraw),
+        ])
+      }
     }
     let imageSelectorButton = null
     if (!vnode.attrs.game.hasImage() && vnode.attrs.game.role !== 'judge') {
