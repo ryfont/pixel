@@ -154,6 +154,20 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   }
   game.pixels('red').forEach(pixelHandler(COLORS.RED_FULL))
   game.pixels('blue').forEach(pixelHandler(COLORS.BLUE_FULL))
+  if (vnode.state.touchMode && !isLoupe) {
+    ctx.lineWidth = 2
+    let p = vnode.state.mousePos
+    ctx.strokeStyle = '#fff'
+    ctx.strokeRect((p.x-LOUPE_VIEW_PAD)*PIXEL_DENSITY,
+      (p.y-LOUPE_VIEW_PAD)*PIXEL_DENSITY,
+      (LOUPE_VIEW_PAD*2+1)*PIXEL_DENSITY,
+      (LOUPE_VIEW_PAD*2+1)*PIXEL_DENSITY)
+    ctx.strokeStyle = '#666'
+    ctx.strokeRect((p.x-LOUPE_VIEW_PAD)*PIXEL_DENSITY+1,
+      (p.y-LOUPE_VIEW_PAD)*PIXEL_DENSITY+1,
+      (LOUPE_VIEW_PAD*2+1)*PIXEL_DENSITY,
+      (LOUPE_VIEW_PAD*2+1)*PIXEL_DENSITY)
+  }
 }
 
 function updateLoupe (vnode) {
@@ -161,9 +175,14 @@ function updateLoupe (vnode) {
   let loupeCtx = loupeCanvas.getContext('2d')
   loupeCtx.imageSmoothingEnabled = false;
   loupeCtx.clearRect(0, 0, 600, 600);
-  let x = Math.round(vnode.state.mousePos.x)
-  let y = Math.round(vnode.state.mousePos.y)
-  drawGame(vnode, loupeCanvas, true, x, y)
+  if (vnode.state.touchMode || vnode.state.mouseIsOver) {
+    let x = Math.round(vnode.state.mousePos.x)
+    let y = Math.round(vnode.state.mousePos.y)
+    drawGame(vnode, loupeCanvas, true, x, y)
+  } else {
+    loupeCtx.fillStyle = '#fff'
+    loupeCtx.fillRect(0,0,600,600)
+  }
   loupeCtx.setLineDash([12,12.5])
   loupeCtx.lineWidth = 2
   loupeCtx.strokeStyle = 'rgba(0,0,0,0.3)'
@@ -241,6 +260,7 @@ export default {
       vnode.state.lastTouchPosition = null
       vnode.state.mouseIsOver = false
       vnode.state.imageSelectorVisible = false
+      vnode.state.touchMode = false
     }
     reset()
     vnode.attrs.game.onReset(reset)
@@ -250,6 +270,8 @@ export default {
     vnode.state.loupe = document.getElementById('loupe')
     setCanvasSize(vnode.state.canvas, 500, 500)
     vnode.state.canvas.onmousedown = event => {
+      console.log('down')
+      vnode.state.touchMode = false
       if (vnode.attrs.game.role === 'judge' || vnode.attrs.role !== vnode.state.viewingPlayer || !vnode.attrs.game.hasImage()) {
         return
       }
@@ -264,6 +286,7 @@ export default {
       m.redraw()
     }
     vnode.state.canvas.onmouseup = event => {
+      vnode.state.touchMode = false
       let {x,y} = getMouseCoords(vnode.state.canvas, event)
       if (vnode.state.tool === 'rect' && vnode.state.currentRect !== null) {
         let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
@@ -273,6 +296,7 @@ export default {
       }
     }
     vnode.state.canvas.onmousemove = event => {
+      vnode.state.touchMode = false
       vnode.state.mouseIsOver = true
       let {x,y} = getMouseCoords(vnode.state.canvas, event)
       vnode.state.mousePos = {x, y}
@@ -288,18 +312,32 @@ export default {
       m.redraw()
     }
     vnode.state.canvas.onmouseover = () => {
+      vnode.state.touchMode = false
       vnode.state.mouseIsOver = true
       m.redraw()
     }
     vnode.state.canvas.onmouseout = () => {
+      vnode.state.touchMode = false
       vnode.state.mouseIsOver = false
       vnode.state.closestRect = null
       m.redraw()
     }
-    vnode.state.canvas.ontouchstart = (e) => {
-      vnode.state.mouseIsOver = getMouseCoords(vnode.state.loupe, e)
+    let ontouch = (e) => {
+      vnode.state.touchMode = true
+      vnode.state.mouseIsOver = false
+      vnode.state.mousePos = getMouseCoords(vnode.state.canvas, e)
+      m.redraw()
+    }
+    vnode.state.canvas.ontouchstart = ontouch
+    vnode.state.canvas.ontouchmove = ontouch
+    vnode.state.canvas.ontouchend = (e) => {
+      // prevent mouse events from firing
+      if (e.cancelable) {
+        e.preventDefault()
+      }
     }
     vnode.state.loupe.ontouchstart = (e) => {
+      vnode.state.touchMode = true
       e.preventDefault()
       vnode.state.lastTouchPosition = getMouseCoords(vnode.state.loupe, e)
     }
