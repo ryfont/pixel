@@ -245,6 +245,19 @@ function updateCanvas (vnode) {
   updateLoupe(vnode)
 }
 
+function setMousePos (vnode, x, y) {
+  vnode.state.mousePos = {x, y}
+  if (vnode.attrs.game.role !== 'judge' && vnode.attrs.role === vnode.state.viewingPlayer) {
+    vnode.state.closestRect = closestRect(vnode.attrs.game.rectangles(vnode.attrs.game.role), x, y)
+  } else {
+    vnode.state.closestRect = null
+  }
+  if (vnode.state.currentRect) {
+    vnode.state.currentRect.x2 = x
+    vnode.state.currentRect.y2 = y
+  }
+}
+
 export default {
   oninit: (vnode) => {
     let reset = () => {
@@ -270,7 +283,6 @@ export default {
     vnode.state.loupe = document.getElementById('loupe')
     setCanvasSize(vnode.state.canvas, 500, 500)
     vnode.state.canvas.onmousedown = event => {
-      console.log('down')
       vnode.state.touchMode = false
       if (vnode.attrs.game.role === 'judge' || vnode.attrs.role !== vnode.state.viewingPlayer || !vnode.attrs.game.hasImage()) {
         return
@@ -299,16 +311,7 @@ export default {
       vnode.state.touchMode = false
       vnode.state.mouseIsOver = true
       let {x,y} = getMouseCoords(vnode.state.canvas, event)
-      vnode.state.mousePos = {x, y}
-      if (vnode.attrs.game.role !== 'judge' && vnode.attrs.role === vnode.state.viewingPlayer) {
-        vnode.state.closestRect = closestRect(vnode.attrs.game.rectangles(vnode.attrs.game.role), x, y)
-      } else {
-        vnode.state.closestRect = null
-      }
-      if (vnode.state.currentRect) {
-        vnode.state.currentRect.x2 = x
-        vnode.state.currentRect.y2 = y
-      }
+      setMousePos(vnode, x, y)
       m.redraw()
     }
     vnode.state.canvas.onmouseover = () => {
@@ -325,7 +328,8 @@ export default {
     let ontouch = (e) => {
       vnode.state.touchMode = true
       vnode.state.mouseIsOver = false
-      vnode.state.mousePos = getMouseCoords(vnode.state.canvas, e)
+      let {x,y} = getMouseCoords(vnode.state.canvas, e)
+      setMousePos(vnode, x, y)
       m.redraw()
     }
     vnode.state.canvas.ontouchstart = ontouch
@@ -344,8 +348,9 @@ export default {
     vnode.state.loupe.ontouchmove = (e) => {
       let {x,y} = getMouseCoords(vnode.state.loupe, e)
       let pixelMult = 250/(LOUPE_VIEW_PAD*2+1)
-      vnode.state.mousePos.x -= (x - vnode.state.lastTouchPosition.x)/pixelMult
-      vnode.state.mousePos.y -= (y - vnode.state.lastTouchPosition.y)/pixelMult
+      setMousePos(vnode,
+        vnode.state.mousePos.x-(x - vnode.state.lastTouchPosition.x)/pixelMult,
+        vnode.state.mousePos.y-(y - vnode.state.lastTouchPosition.y)/pixelMult)
       vnode.state.lastTouchPosition = {x,y}
       m.redraw()
     }
@@ -385,7 +390,7 @@ export default {
       toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     }
     let rectCoordsView = null
-    if (vnode.state.mouseIsOver) {
+    if (vnode.state.mouseIsOver || vnode.state.touchMode) {
       if (vnode.state.currentRect) {
         let {x1,y1,x2,y2} = vnode.state.currentRect
         rectCoordsView = m('.hint.row', [
