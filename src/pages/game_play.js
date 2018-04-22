@@ -1,84 +1,8 @@
 import m from 'mithril'
 import ImageSelector from '../components/image_selector'
 import {description} from '../components/description'
-
-const COLORS = {
-  RED: 'rgba(239, 65, 70, 0.5)',
-  BLUE: 'rgba(84, 54, 218, 0.5)',
-  RED_FULL: 'rgba(239, 65, 70, 1)',
-  BLUE_FULL: 'rgba(84, 54, 218, 1)',
-  RED_FADED: 'rgba(239, 65, 70, 0.1)',
-  BLUE_FADED: 'rgba(84, 54, 218, 0.1)',
-  SELECTION: 'rgba(157, 35, 220, 0.9)'
-}
-
-const PIXEL_WIDTH = 9
-const LOUPE_VIEW_PAD = 14
-const PIXEL_DENSITY = 2
-const ERASER_SIZE = 10
-
-function capitalize (str) {
-  return str[0].toUpperCase() + str.slice(1)
-}
-
-// returns clicked rect at x, y
-// return null if no rect within +- 10 pixels of clicked point
-// also always counts rects no matter how far border is if cursor is inside bounds
-function closestRect (rectangles, x, y) {
-  let best = null
-  let bestDist = null
-  Object.keys(rectangles).forEach(rectId => {
-    let rect = rectangles[rectId]
-    let overallDist = Math.min(
-      manhattanDistToFilledRect(x, y, rect.x, rect.y, 1, rect.h),
-      manhattanDistToFilledRect(x, y, rect.x, rect.y, rect.w, 1),
-      manhattanDistToFilledRect(x, y, rect.x+rect.w, rect.y, 1, rect.h),
-      manhattanDistToFilledRect(x, y, rect.x, rect.y+rect.h, rect.w, 1)
-    )
-    let validRect = overallDist < ERASER_SIZE || (x>=rect.x && y>=rect.y && x<rect.x+rect.w && y<rect.y+rect.h)
-    if ((bestDist===null || overallDist < bestDist) && validRect) {
-      bestDist = overallDist
-      best = rectId
-    }
-  })
-  return best
-}
-
-function shouldDisplayImage (vnode) {
-  return vnode.state.imgCanvas && vnode.state.revealImage
-}
-
-function manhattanDistToFilledRect (pointX, pointY, x, y, w, h) {
-  let totalDist = 0
-  if (pointX < x) {
-    totalDist += x-pointX
-  } else if (pointX > x+w) {
-    totalDist += pointX-(x+w)
-  }
-  if (pointY < y) {
-    totalDist += y-pointY
-  } else if (pointY > y+h) {
-    totalDist += pointY-(y+h)
-  }
-  return totalDist
-}
-
-function setCanvasSize (canvas, width, height) {
-  canvas.width = width*PIXEL_DENSITY
-  canvas.height = height*PIXEL_DENSITY
-  canvas.style.width = `${width}px`
-  canvas.style.height = `${height}px`
-}
-
-function normalizeRect(currentRect) {
-  let {x1,x2,y1,y2} = currentRect
-  return {
-    x: Math.round(Math.min(x1, x2)),
-    y: Math.round(Math.min(y1, y2)),
-    w: Math.round(Math.abs(x1-x2)),
-    h: Math.round(Math.abs(y1-y2))
-  }
-}
+import {COLORS, PIXEL_WIDTH, LOUPE_VIEW_PAD, PIXEL_DENSITY} from '../constants'
+import {capitalize, closestRect, normalizeRect, setCanvasSize} from '../helpers'
 
 function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   let game = vnode.attrs.game
@@ -95,7 +19,7 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
     dx -= LOUPE_VIEW_PAD*pixelMult
     dy -= LOUPE_VIEW_PAD*pixelMult
   }
-  if (shouldDisplayImage(vnode)) {
+  if (vnode.state.imgCanvas && vnode.state.revealImage) {
     ctx.drawImage(
       vnode.state.imgCanvas,
       0-dx, 0-dy, pixelMult*vnode.state.imgCanvas.width, pixelMult*vnode.state.imgCanvas.height)
