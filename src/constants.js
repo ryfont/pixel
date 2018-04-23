@@ -12,3 +12,5 @@ export const PIXEL_WIDTH = 9
 export const LOUPE_VIEW_PAD = 14
 export const PIXEL_DENSITY = 2
 export const ERASER_SIZE = 10
+export const MOBILE_MAX_WIDTH = 550
+export const TABLET_MAX_WIDTH = 1079

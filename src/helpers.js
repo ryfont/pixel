@@ -3,8 +3,17 @@ import {ERASER_SIZE, PIXEL_DENSITY} from './constants'
 export function setCanvasSize (canvas, width, height) {
   canvas.width = width*PIXEL_DENSITY
   canvas.height = height*PIXEL_DENSITY
-  canvas.style.width = `${width}px`
-  canvas.style.height = `${height}px`
+  canvas.style.maxWidth = `${width}px`
+  canvas.style.maxHeight = `${height}px`
+}
+
+export function getMouseCoords(canvas, event) {
+  let bounds = canvas.getBoundingClientRect()
+  if (event.changedTouches) {
+    event = event.changedTouches[0]
+  }
+  let mult = (canvas.width/PIXEL_DENSITY)/canvas.offsetWidth // may need to multiply if canvas is shrunk by width of page
+  return {x: (event.clientX - bounds.left)*mult, y: (event.clientY - bounds.top)*mult}
 }
 
 export function normalizeRect(currentRect) {
