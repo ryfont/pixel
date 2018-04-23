@@ -268,6 +268,10 @@ export default {
       m.redraw()
     }
     let ontouch = (e) => {
+      if (vnode.attrs.game.role !== 'judge' && !vnode.attrs.game.hasImage()) {
+        // the set image button has appeared
+        return
+      }
       e.preventDefault()
       vnode.state.touchMode = true
       vnode.state.mouseIsOver = false
