@@ -170,6 +170,8 @@ function updateCanvas (vnode) {
 }
 
 function setMousePos (vnode, x, y) {
+  x = Math.min(Math.max(0, x), vnode.state.canvas.width/PIXEL_DENSITY-1)
+  y = Math.min(Math.max(0, y), vnode.state.canvas.height/PIXEL_DENSITY-1)
   vnode.state.mousePos = {x, y}
   if (vnode.attrs.game.role !== 'judge' && vnode.attrs.role === vnode.state.viewingPlayer) {
     vnode.state.closestRect = closestRect(vnode.attrs.game.rectangles(vnode.attrs.game.role), x, y)
