@@ -34,13 +34,13 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   }
   function drawRects (player, color) {
     function drawRect (x, y, w, h, id) {
-      ctx.lineWidth = 0
+      ctx.lineWidth = isLoupe ? 8 : 4
       if (!isLoupe && id === vnode.state.closestRect && vnode.state.tool === 'erase' && player === vnode.attrs.game.role) {
-        ctx.fillStyle = COLORS.SELECTION
+        ctx.strokeStyle = COLORS.SELECTION
       } else {
-        ctx.fillStyle = color
+        ctx.strokeStyle = color
       }
-      ctx.fillRect((x+.5)*pixelMult-dx, (y+.5)*pixelMult-dy, w*pixelMult, h*pixelMult)
+      ctx.strokeRect((x+.5)*pixelMult-dx, (y+.5)*pixelMult-dy, w*pixelMult, h*pixelMult)
     }
     let rectangles = game.rectangles(player)
     Object.keys(rectangles).forEach(rectId => {

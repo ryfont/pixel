@@ -1,6 +1,6 @@
 export const COLORS = {
-  RED: 'rgba(239, 65, 70, 0.5)',
-  BLUE: 'rgba(84, 54, 218, 0.5)',
+  RED: 'rgba(239, 65, 70, 0.9)',
+  BLUE: 'rgba(84, 54, 218, 0.9)',
   RED_FULL: 'rgba(239, 65, 70, 1)',
   BLUE_FULL: 'rgba(84, 54, 218, 1)',
   RED_FADED: 'rgba(239, 65, 70, 0.1)',
