@@ -1,3 +1,19 @@
+@font-face {
+  font-family: 'Colfax';
+  font-weight: normal;
+  src: url('/fonts/ColfaxWebRegularAlt.eot?#iefix') format('embedded-opentype'),
+       url('/fonts/ColfaxWebRegularAlt.woff2') format('woff2'),
+       url('/fonts/ColfaxWebRegularAlt.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Colfax';
+  font-weight: bold;
+  src: url('/fonts/ColfaxWebMediumAlt.eot?#iefix') format('embedded-opentype'),
+       url('/fonts/ColfaxWebMediumAlt.woff2') format('woff2'),
+       url('/fonts/ColfaxWebMediumAlt.woff') format('woff');
+}
+
 html {
   font-size: 18px;
   color: #562F5F;
@@ -7,7 +23,7 @@ html {
 }
 body {
   background-color: #EEEAEE;
-  font-family: Colfax;
+  font-family: "Colfax", Helvetica, san-serif;
 }
 .coinResults {
   animation: 1s reveal;
