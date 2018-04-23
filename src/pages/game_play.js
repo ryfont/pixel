@@ -47,7 +47,7 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
       let {x,y,w,h} = rectangles[rectId]
       drawRect(x,y,w,h,rectId)
     })
-    if (vnode.state.currentRect) {
+    if (vnode.state.currentRect && vnode.state.viewingPlayer === vnode.attrs.game.role) {
       let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
       drawRect(x,y,w,h,-1)
     }
@@ -314,7 +314,9 @@ export default {
       return m('button', {
         class: custom_class + (vnode.state[type] === name ? " selected" : ""),
         disabled: disable,
-        onclick: () => {vnode.state[type] = name}
+        onclick: () => {
+          vnode.state[type] = name
+        }
       }, label)
     }
 
@@ -372,29 +374,29 @@ export default {
     } else {
       let roleName = capitalize(vnode.attrs.game.role)
       roleSection.push(m(`.role-${vnode.attrs.game.role}`, `${roleName} Player`))
+      let canDraw = vnode.attrs.role === vnode.state.viewingPlayer
       if (vnode.state.touchMode && vnode.state.currentRect) {
         roleSection = roleSection.concat([
-          m('button', {onclick: () => {
+          m('button', {disabled: !canDraw, onclick: () => {
             endRect(vnode)
           }}, 'End Rectangle'),
-          m('button', {onclick: () => {
+          m('button', {disabled: !canDraw, onclick: () => {
             vnode.state.currentRect = null
           }}, 'Cancel Rectangle')
         ])
       } else if (vnode.state.touchMode) {
         roleSection = roleSection.concat([
-          m('button', {onclick: ()=>{
+          m('button', {disabled: !canDraw, onclick: ()=>{
             startRect(vnode)
           }}, 'Start Rectangle'),
-          m('button', {onclick: ()=>{
+          m('button', {disabled: !canDraw, onclick: ()=>{
             makePixel(vnode)
           }}, 'Reveal Pixel'),
-          m('button', {disabled: !vnode.state.closestRect, onclick: ()=>{
+          m('button', {disabled: !canDraw || !vnode.state.closestRect, onclick: ()=>{
             eraseClosestRect(vnode)
           }}, 'Erase')
         ])
       } else {
-        let canDraw = vnode.attrs.role === vnode.state.viewingPlayer
         roleSection = roleSection.concat([
           stateButton('tool', 'rect', 'Rectangle Tool', !canDraw),
           stateButton('tool', 'pixel', 'Pixel Reveal Tool', !canDraw),
