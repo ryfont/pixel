@@ -202,9 +202,10 @@ function makePixel (vnode) {
   vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
 }
 
-function eraseCurrentRect (vnode) {
+function eraseClosestRect (vnode) {
   if (vnode.state.closestRect) {
     vnode.attrs.game.removeRectangle(vnode.state.closestRect)
+    vnode.state.closestRect = null
   }
 }
 
@@ -238,7 +239,7 @@ export default {
         return
       }
       if (vnode.state.tool === 'erase') {
-        eraseCurrentRect(vnode)
+        eraseClosestRect(vnode)
       } else if (vnode.state.tool === 'pixel') {
         makePixel(vnode)
       } else if (vnode.state.tool === 'rect') {
@@ -386,7 +387,7 @@ export default {
             makePixel(vnode)
           }}, 'Reveal Pixel'),
           m('button', {disabled: !vnode.state.closestRect, onclick: ()=>{
-            eraseCurrentRect(vnode)
+            eraseClosestRect(vnode)
           }}, 'Erase')
         ])
       } else {
