@@ -421,11 +421,13 @@ export default {
               vnode.attrs.game.reset()
             }}, 'Reset Board & Roles')
           ]),
-          m('div', [
-            playerbar,
-            m('.play-wrap.center.middle', {style: `border-color: ${vnode.state.viewingPlayer==='red'?'#EF4146':'#5436DA'}`}, [
-              m('canvas#play', {style: 'cursor: crosshair;'}),
-              imageSelectorButton
+          m('.col.gap-2', [
+            m('.col', [
+              playerbar,
+              m('.play-wrap.center.middle', {style: `border-color: ${vnode.state.viewingPlayer==='red'?'#EF4146':'#5436DA'}`}, [
+                m('canvas#play', {style: 'cursor: crosshair;'}),
+                imageSelectorButton
+              ])
             ]),
             m('.row.gap-2.middle', toolbar),
           ]),
