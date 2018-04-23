@@ -9,11 +9,15 @@ export function setCanvasSize (canvas, width, height) {
 
 export function normalizeRect(currentRect) {
   let {x1,x2,y1,y2} = currentRect
+  x1=Math.round(x1)
+  x2=Math.round(x2)
+  y1=Math.round(y1)
+  y2=Math.round(y2)
   return {
-    x: Math.round(Math.min(x1, x2)),
-    y: Math.round(Math.min(y1, y2)),
-    w: Math.round(Math.abs(x1-x2)),
-    h: Math.round(Math.abs(y1-y2))
+    x: Math.min(x1, x2),
+    y: Math.min(y1, y2),
+    w: Math.abs(x1-x2),
+    h: Math.abs(y1-y2)
   }
 }
 

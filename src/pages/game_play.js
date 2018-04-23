@@ -184,6 +184,30 @@ function setMousePos (vnode, x, y) {
   }
 }
 
+function startRect (vnode) {
+  let {x,y} = vnode.state.mousePos
+  vnode.state.currentRect = {x1: x, y1: y, x2: x, y2: y}
+}
+
+function endRect (vnode) {
+  if (vnode.state.currentRect !== null) {
+    let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
+    vnode.attrs.game.addRectangle(x,y,w,h)
+    vnode.state.currentRect = null
+  }
+}
+
+function makePixel (vnode) {
+  let {x,y} = vnode.state.mousePos
+  vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
+}
+
+function eraseCurrentRect (vnode) {
+  if (vnode.state.closestRect) {
+    vnode.attrs.game.removeRectangle(vnode.state.closestRect)
+  }
+}
+
 export default {
   oninit: (vnode) => {
     let reset = () => {
@@ -213,23 +237,20 @@ export default {
       if (vnode.attrs.game.role === 'judge' || vnode.attrs.role !== vnode.state.viewingPlayer || !vnode.attrs.game.hasImage()) {
         return
       }
-      let {x,y} = getMouseCoords(vnode.state.canvas, event)
-      if (vnode.state.tool === 'erase' && vnode.state.closestRect) {
-        vnode.attrs.game.removeRectangle(vnode.state.closestRect)
+      if (vnode.state.tool === 'erase') {
+        eraseCurrentRect(vnode)
       } else if (vnode.state.tool === 'pixel') {
-        vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
+        makePixel(vnode)
       } else if (vnode.state.tool === 'rect') {
-        vnode.state.currentRect = {x1: x, y1: y, x2: x, y2: y}
+        startRect(vnode)
       }
       m.redraw()
     }
     vnode.state.canvas.onmouseup = event => {
       vnode.state.touchMode = false
       let {x,y} = getMouseCoords(vnode.state.canvas, event)
-      if (vnode.state.tool === 'rect' && vnode.state.currentRect !== null) {
-        let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
-        vnode.attrs.game.addRectangle(x,y,w,h)
-        vnode.state.currentRect = null
+      if (vnode.state.tool === 'rect') {
+        endRect(vnode)
         m.redraw()
       }
     }
@@ -353,19 +374,19 @@ export default {
       if (vnode.state.touchMode && vnode.state.currentRect) {
         roleSection = roleSection.concat([
           m('button', {onclick: () => {
-            console.log("TODO END RECTANGLE")
+            endRect(vnode)
           }}, 'End Rectangle')
         ])
       } else if (vnode.state.touchMode) {
         roleSection = roleSection.concat([
           m('button', {onclick: ()=>{
-            console.log("TODO")
+            startRect(vnode)
           }}, 'Start Rectangle'),
           m('button', {onclick: ()=>{
-            console.log("TODO")
+            makePixel(vnode)
           }}, 'Reveal Pixel'),
           m('button', {disabled: !vnode.state.closestRect, onclick: ()=>{
-            console.log("TODO")
+            eraseCurrentRect(vnode)
           }}, 'Erase')
         ])
       } else {
