@@ -11,7 +11,7 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
   ctx.clearRect(0, 0, 500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
   ctx.fillStyle = "#fff"
   ctx.fillRect(0,0,500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
-  let canEdit = vnode.attrs.role === vnode.state.viewingPlayer
+  let canEdit = vnode.attrs.game.role === vnode.state.viewingPlayer
   let pixelMult = isLoupe ? 600/(LOUPE_VIEW_PAD*2+1) : PIXEL_DENSITY
   dx *= pixelMult
   dy *= pixelMult
@@ -173,7 +173,7 @@ function setMousePos (vnode, x, y) {
   x = Math.min(Math.max(0, x), vnode.state.canvas.width/PIXEL_DENSITY-1)
   y = Math.min(Math.max(0, y), vnode.state.canvas.height/PIXEL_DENSITY-1)
   vnode.state.mousePos = {x, y}
-  if (vnode.attrs.game.role !== 'judge' && vnode.attrs.role === vnode.state.viewingPlayer) {
+  if (vnode.attrs.game.role !== 'judge' && vnode.attrs.game.role === vnode.state.viewingPlayer) {
     vnode.state.closestRect = closestRect(vnode.attrs.game.rectangles(vnode.attrs.game.role), x, y)
   } else {
     vnode.state.closestRect = null
@@ -321,8 +321,8 @@ export default {
     }
 
     let playerbar = m('.row.gap-2', [
-      stateButton('viewingPlayer', 'red', vnode.attrs.role === 'red' ? 'Your Drawing' : "Red's Drawing", false, "tab-red"),
-      stateButton('viewingPlayer', 'blue', vnode.attrs.role === 'blue' ? 'Your Drawing' : "Blue's Drawing", false, "tab-blue"),
+      stateButton('viewingPlayer', 'red', vnode.attrs.game.role === 'red' ? 'Your Drawing' : "Red's Drawing", false, "tab-red"),
+      stateButton('viewingPlayer', 'blue', vnode.attrs.game.role === 'blue' ? 'Your Drawing' : "Blue's Drawing", false, "tab-blue"),
     ])
 
     let toolbar = []
@@ -374,7 +374,7 @@ export default {
     } else {
       let roleName = capitalize(vnode.attrs.game.role)
       roleSection.push(m(`.role-${vnode.attrs.game.role}`, `${roleName} Player`))
-      let canDraw = vnode.attrs.role === vnode.state.viewingPlayer
+      let canDraw = vnode.attrs.game.role === vnode.state.viewingPlayer
       if (vnode.state.touchMode && vnode.state.currentRect) {
         roleSection = roleSection.concat([
           m('button', {disabled: !canDraw, onclick: () => {
