@@ -8,24 +8,24 @@ const app = firebase.initializeApp(config)
 
 function getImage (url) {
   return new Promise((resolve, reject) => {
-    let i = new Image()
+    let i = new window.Image()
     i.onload = () => resolve(i)
     i.onerror = reject
-    i.crossOrigin = "meow"
+    i.crossOrigin = 'meow'
     i.src = url
   })
 }
 
 function resizedImage (url) {
-  let dest = document.createElement("canvas")
+  let dest = document.createElement('canvas')
   return getImage(url)
     .then(image => {
       if (image.width > image.height) {
         dest.width = 500
-        dest.height = 500/image.width*image.height
+        dest.height = 500 / image.width * image.height
       } else {
         dest.height = 500
-        dest.width = 500/image.height*image.width
+        dest.width = 500 / image.height * image.width
       }
       return pica.resize(image, dest)
     })
@@ -157,7 +157,7 @@ export class Game {
 
   _checkCanDraw () {
     if (!this.state || !this.state.players || ['red', 'blue'].indexOf(this.role) === -1) {
-      throw 'Can only draw if current player is red or blue'
+      throw new Error('Can only draw if current player is red or blue')
     }
   }
 
@@ -182,7 +182,7 @@ export class Game {
 
   // hash game code and state num to get who is the liar and who selects the image
   coinflipResult () {
-    let firstChar = md5(`${this.code} ${this.state?this.state.gameNum:'0'} ${this.state.coinflip}`)[0]
+    let firstChar = md5(`${this.code} ${this.state ? this.state.gameNum : '0'} ${this.state.coinflip}`)[0]
     return [['0', '1', '2', '3', '4', '5', '6', '7', '8'].indexOf(firstChar) === -1, firstChar]
   }
 
@@ -209,21 +209,21 @@ export class Game {
     if (this.state && this.state.image) {
       return this.state.image
     }
-    return ""
+    return ''
   }
 
   hasImage () {
-    return this.imageUrl() !== ""
+    return this.imageUrl() !== ''
   }
 
   image () {
-    if (this.imageUrl() === "") {
+    if (this.imageUrl() === '') {
       return null
     }
     return resizedImage(this.imageUrl())
   }
 
-  setImageUrl (url, attribution={url:'', text:''}) {
+  setImageUrl (url, attribution = {url: '', text: ''}) {
     return resizedImage(url)
       .then(() => {
         return this.dbref.child('image').set(url)
@@ -234,7 +234,7 @@ export class Game {
   }
 
   attribution () {
-    if (!this.state || !this.state.attribution || this.state.attribution.text.length===0) {
+    if (!this.state || !this.state.attribution || this.state.attribution.text.length === 0) {
       return null
     }
     return this.state.attribution

@@ -1,5 +1,5 @@
 import m from 'mithril'
-import {freshNewGame, gameExists} from '../state'
+import {freshNewGame} from '../state'
 import {description} from '../components/description'
 
 export default {

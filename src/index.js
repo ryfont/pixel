@@ -29,8 +29,8 @@ const RedirectToJudge = {
 }
 
 m.route.prefix('')
-m.route(document.getElementById('page'), "/", {
-    "/": GameSelectionPage,
-    "/game/:code": RedirectToJudge,
-    "/game/:code/:role": GamePage,
+m.route(document.getElementById('page'), '/', {
+  '/': GameSelectionPage,
+  '/game/:code': RedirectToJudge,
+  '/game/:code/:role': GamePage
 })

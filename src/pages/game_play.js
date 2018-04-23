@@ -4,30 +4,30 @@ import {description} from '../components/description'
 import {COLORS, PIXEL_WIDTH, LOUPE_VIEW_PAD, PIXEL_DENSITY, MOBILE_MAX_WIDTH, TABLET_MAX_WIDTH} from '../constants'
 import {capitalize, closestRect, normalizeRect, setCanvasSize, getMouseCoords} from '../helpers'
 
-function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
+function drawGame (vnode, canvas, isLoupe, dx = 0, dy = 0) {
   let game = vnode.attrs.game
   let ctx = canvas.getContext('2d')
   ctx.imageSmoothingEnabled = false
-  ctx.clearRect(0, 0, 500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
-  ctx.fillStyle = "#fff"
-  ctx.fillRect(0,0,500*PIXEL_DENSITY, 500*PIXEL_DENSITY)
-  let pixelMult = isLoupe ? 600/(LOUPE_VIEW_PAD*2+1) : PIXEL_DENSITY
+  ctx.clearRect(0, 0, 500 * PIXEL_DENSITY, 500 * PIXEL_DENSITY)
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(0, 0, 500 * PIXEL_DENSITY, 500 * PIXEL_DENSITY)
+  let pixelMult = isLoupe ? 600 / (LOUPE_VIEW_PAD * 2 + 1) : PIXEL_DENSITY
   dx *= pixelMult
   dy *= pixelMult
   if (isLoupe) {
-    dx -= LOUPE_VIEW_PAD*pixelMult
-    dy -= LOUPE_VIEW_PAD*pixelMult
+    dx -= LOUPE_VIEW_PAD * pixelMult
+    dy -= LOUPE_VIEW_PAD * pixelMult
   }
   if (vnode.state.imgCanvas && vnode.state.revealImage) {
     ctx.drawImage(
       vnode.state.imgCanvas,
-      0-dx, 0-dy, pixelMult*vnode.state.imgCanvas.width, pixelMult*vnode.state.imgCanvas.height)
+      0 - dx, 0 - dy, pixelMult * vnode.state.imgCanvas.width, pixelMult * vnode.state.imgCanvas.height)
     if (!isLoupe) {
       if (!isLoupe && vnode.state.mouseIsOver) {
         // fade background image if mouse is over image
         ctx.lineWidth = 0
         ctx.fillStyle = 'rgba(255,255,255,0.1)'
-        ctx.fillRect(0,0,vnode.state.canvas.width, vnode.state.canvas.height)
+        ctx.fillRect(0, 0, vnode.state.canvas.width, vnode.state.canvas.height)
       }
     }
   }
@@ -39,16 +39,16 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
       } else {
         ctx.strokeStyle = color
       }
-      ctx.strokeRect((x+.5)*pixelMult-dx, (y+.5)*pixelMult-dy, w*pixelMult, h*pixelMult)
+      ctx.strokeRect((x + 0.5) * pixelMult - dx, (y + 0.5) * pixelMult - dy, w * pixelMult, h * pixelMult)
     }
     let rectangles = game.rectangles(player)
     Object.keys(rectangles).forEach(rectId => {
-      let {x,y,w,h} = rectangles[rectId]
-      drawRect(x,y,w,h,rectId)
+      let {x, y, w, h} = rectangles[rectId]
+      drawRect(x, y, w, h, rectId)
     })
     if (vnode.state.currentRect && player === vnode.attrs.game.role) {
-      let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
-      drawRect(x,y,w,h,-1)
+      let {x, y, w, h} = normalizeRect(vnode.state.currentRect)
+      drawRect(x, y, w, h, -1)
     }
   }
   drawRects('red', COLORS.RED)
@@ -57,14 +57,14 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
     let drawnPixelWidth = isLoupe ? 1 : PIXEL_WIDTH
     ctx.lineWidth = isLoupe ? 5 : 3
     ctx.strokeStyle = color
-    return ({x,y}) => {
+    return ({x, y}) => {
       if (vnode.state.imgCanvas) {
-        ctx.fillStyle = pixelColor(vnode, {x,y})
+        ctx.fillStyle = pixelColor(vnode, {x, y})
         ctx.beginPath()
-        ctx.rect((x - drawnPixelWidth/2 + 0.5)*pixelMult-dx,
-          (y - drawnPixelWidth/2 + 0.5)*pixelMult-dy,
-          drawnPixelWidth*pixelMult,
-          drawnPixelWidth*pixelMult)
+        ctx.rect((x - drawnPixelWidth / 2 + 0.5) * pixelMult - dx,
+          (y - drawnPixelWidth / 2 + 0.5) * pixelMult - dy,
+          drawnPixelWidth * pixelMult,
+          drawnPixelWidth * pixelMult)
         ctx.fill()
         ctx.stroke()
       }
@@ -76,32 +76,32 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
     ctx.lineWidth = 2
     let p = vnode.state.mousePos
     ctx.strokeStyle = '#fff'
-    ctx.strokeRect((p.x-LOUPE_VIEW_PAD)*PIXEL_DENSITY,
-      (p.y-LOUPE_VIEW_PAD)*PIXEL_DENSITY,
-      (LOUPE_VIEW_PAD*2+1)*PIXEL_DENSITY,
-      (LOUPE_VIEW_PAD*2+1)*PIXEL_DENSITY)
+    ctx.strokeRect((p.x - LOUPE_VIEW_PAD) * PIXEL_DENSITY,
+      (p.y - LOUPE_VIEW_PAD) * PIXEL_DENSITY,
+      (LOUPE_VIEW_PAD * 2 + 1) * PIXEL_DENSITY,
+      (LOUPE_VIEW_PAD * 2 + 1) * PIXEL_DENSITY)
     ctx.strokeStyle = '#666'
-    ctx.strokeRect((p.x-LOUPE_VIEW_PAD)*PIXEL_DENSITY+1,
-      (p.y-LOUPE_VIEW_PAD)*PIXEL_DENSITY+1,
-      (LOUPE_VIEW_PAD*2+1)*PIXEL_DENSITY,
-      (LOUPE_VIEW_PAD*2+1)*PIXEL_DENSITY)
+    ctx.strokeRect((p.x - LOUPE_VIEW_PAD) * PIXEL_DENSITY + 1,
+      (p.y - LOUPE_VIEW_PAD) * PIXEL_DENSITY + 1,
+      (LOUPE_VIEW_PAD * 2 + 1) * PIXEL_DENSITY,
+      (LOUPE_VIEW_PAD * 2 + 1) * PIXEL_DENSITY)
   }
 }
 
 function updateLoupe (vnode) {
   let loupeCanvas = document.getElementById('loupe')
   let loupeCtx = loupeCanvas.getContext('2d')
-  loupeCtx.imageSmoothingEnabled = false;
-  loupeCtx.clearRect(0, 0, 600, 600);
+  loupeCtx.imageSmoothingEnabled = false
+  loupeCtx.clearRect(0, 0, 600, 600)
   if (vnode.state.touchMode || vnode.state.mouseIsOver) {
     let x = Math.round(vnode.state.mousePos.x)
     let y = Math.round(vnode.state.mousePos.y)
     drawGame(vnode, loupeCanvas, true, x, y)
   } else {
     loupeCtx.fillStyle = '#fff'
-    loupeCtx.fillRect(0,0,600,600)
+    loupeCtx.fillRect(0, 0, 600, 600)
   }
-  loupeCtx.setLineDash([12,12.5])
+  loupeCtx.setLineDash([12, 12.5])
   loupeCtx.lineWidth = 2
   loupeCtx.strokeStyle = 'rgba(0,0,0,0.3)'
   loupeCtx.beginPath()
@@ -156,8 +156,8 @@ function updateCanvas (vnode) {
 }
 
 function setMousePos (vnode, x, y) {
-  x = Math.min(Math.max(0, x), vnode.state.canvas.width/PIXEL_DENSITY-1)
-  y = Math.min(Math.max(0, y), vnode.state.canvas.height/PIXEL_DENSITY-1)
+  x = Math.min(Math.max(0, x), vnode.state.canvas.width / PIXEL_DENSITY - 1)
+  y = Math.min(Math.max(0, y), vnode.state.canvas.height / PIXEL_DENSITY - 1)
   vnode.state.mousePos = {x, y}
   if (vnode.attrs.game.role !== 'judge') {
     vnode.state.closestRect = closestRect(vnode.attrs.game.rectangles(vnode.attrs.game.role), x, y)
@@ -171,20 +171,20 @@ function setMousePos (vnode, x, y) {
 }
 
 function startRect (vnode) {
-  let {x,y} = vnode.state.mousePos
+  let {x, y} = vnode.state.mousePos
   vnode.state.currentRect = {x1: x, y1: y, x2: x, y2: y}
 }
 
 function endRect (vnode) {
   if (vnode.state.currentRect !== null) {
-    let {x,y,w,h} = normalizeRect(vnode.state.currentRect)
-    vnode.attrs.game.addRectangle(x,y,w,h)
+    let {x, y, w, h} = normalizeRect(vnode.state.currentRect)
+    vnode.attrs.game.addRectangle(x, y, w, h)
     vnode.state.currentRect = null
   }
 }
 
 function makePixel (vnode) {
-  let {x,y} = vnode.state.mousePos
+  let {x, y} = vnode.state.mousePos
   vnode.attrs.game.addPixel(Math.round(x), Math.round(y))
 }
 
@@ -200,8 +200,8 @@ export default {
     let reset = () => {
       vnode.state.tool = 'rect' // either 'rect', 'pixel', 'erase'
       vnode.state.revealImage = vnode.attrs.game.role !== 'judge'
-      vnode.state.mousePos = {x:0,y:0}
-      vnode.state.lastImageUrl = ""
+      vnode.state.mousePos = {x: 0, y: 0}
+      vnode.state.lastImageUrl = ''
       vnode.state.imgCanvas = null
       vnode.state.currentRect = null
       vnode.state.rectEnd = null
@@ -236,7 +236,6 @@ export default {
     }
     vnode.state.canvas.onmouseup = event => {
       vnode.state.touchMode = false
-      let {x,y} = getMouseCoords(vnode.state.canvas, event)
       if (vnode.state.tool === 'rect') {
         endRect(vnode)
         m.redraw()
@@ -245,7 +244,7 @@ export default {
     vnode.state.canvas.onmousemove = event => {
       vnode.state.touchMode = false
       vnode.state.mouseIsOver = true
-      let {x,y} = getMouseCoords(vnode.state.canvas, event)
+      let {x, y} = getMouseCoords(vnode.state.canvas, event)
       setMousePos(vnode, x, y)
       m.redraw()
     }
@@ -268,7 +267,7 @@ export default {
       e.preventDefault()
       vnode.state.touchMode = true
       vnode.state.mouseIsOver = false
-      let {x,y} = getMouseCoords(vnode.state.canvas, e)
+      let {x, y} = getMouseCoords(vnode.state.canvas, e)
       setMousePos(vnode, x, y)
       m.redraw()
     }
@@ -280,12 +279,12 @@ export default {
       vnode.state.lastTouchPosition = getMouseCoords(vnode.state.loupe, e)
     }
     vnode.state.loupe.ontouchmove = (e) => {
-      let {x,y} = getMouseCoords(vnode.state.loupe, e)
-      let pixelMult = 250/(LOUPE_VIEW_PAD*2+1)
+      let {x, y} = getMouseCoords(vnode.state.loupe, e)
+      let pixelMult = 250 / (LOUPE_VIEW_PAD * 2 + 1)
       setMousePos(vnode,
-        vnode.state.mousePos.x-(x - vnode.state.lastTouchPosition.x)/pixelMult,
-        vnode.state.mousePos.y-(y - vnode.state.lastTouchPosition.y)/pixelMult)
-      vnode.state.lastTouchPosition = {x,y}
+        vnode.state.mousePos.x - (x - vnode.state.lastTouchPosition.x) / pixelMult,
+        vnode.state.mousePos.y - (y - vnode.state.lastTouchPosition.y) / pixelMult)
+      vnode.state.lastTouchPosition = {x, y}
       m.redraw()
     }
     vnode.state.loupe.ontouchend = (e) => {
@@ -301,9 +300,9 @@ export default {
     updateLoupe(vnode)
   },
   view: (vnode) => {
-    const stateButton = (type, name, label, disable=false, custom_class="") => {
+    const stateButton = (type, name, label, disable = false, customClass = '') => {
       return m('button', {
-        class: custom_class + (vnode.state[type] === name ? " selected" : ""),
+        class: customClass + (vnode.state[type] === name ? ' selected' : ''),
         disabled: disable,
         onclick: () => {
           vnode.state[type] = name
@@ -323,18 +322,18 @@ export default {
     let rectCoordsView = null
     if (vnode.state.mouseIsOver || vnode.state.touchMode) {
       if (vnode.state.currentRect) {
-        let {x1,y1,x2,y2} = vnode.state.currentRect
+        let {x1, y1, x2, y2} = vnode.state.currentRect
         rectCoordsView = m('.hint.row.left', [
           m('.coord', {style: 'width:50px;'}, `x1: ${Math.round(x1)}`),
           m('.coord', {style: 'width:50px;'}, `y1: ${Math.round(y1)}`),
           m('.coord', {style: 'width:50px;'}, `x2: ${Math.round(x2)}`),
-          m('.coord', {style: 'width:50px;'}, `y2: ${Math.round(y2)}`),
+          m('.coord', {style: 'width:50px;'}, `y2: ${Math.round(y2)}`)
         ])
       } else {
-        let {x,y} = vnode.state.mousePos
+        let {x, y} = vnode.state.mousePos
         rectCoordsView = m('.hint.row.left', [
           m('.coord', {style: 'width:50px;'}, `x: ${Math.round(x)}`),
-          m('.coord', {style: 'width:50px;'}, `y: ${Math.round(y)}`),
+          m('.coord', {style: 'width:50px;'}, `y: ${Math.round(y)}`)
         ])
       }
     }
@@ -342,7 +341,6 @@ export default {
     let [coinResult, coinHash] = vnode.attrs.game.coinflipResult()
 
     let roleSection = []
-    let coinSection = null
     if (vnode.attrs.game.role === 'judge') {
       roleSection.push(m('.role-judge', 'Judge'))
       if (vnode.attrs.game.isFull()) {
@@ -370,34 +368,35 @@ export default {
         ])
       } else if (vnode.state.touchMode) {
         roleSection = roleSection.concat([
-          m('button', {onclick: ()=>{
+          m('button', {onclick: () => {
             startRect(vnode)
           }}, 'Start Rectangle'),
-          m('button', {onclick: ()=>{
+          m('button', {onclick: () => {
             makePixel(vnode)
           }}, 'Reveal Pixel'),
-          m('button', {disabled: !vnode.state.closestRect, onclick: ()=>{
-            eraseClosestRect(vnode)
-          }}, 'Erase')
+          m('button', {disabled: !vnode.state.closestRect,
+            onclick: () => {
+              eraseClosestRect(vnode)
+            }}, 'Erase')
         ])
       } else {
         roleSection = roleSection.concat([
           stateButton('tool', 'rect', 'Rectangle Tool'),
           stateButton('tool', 'pixel', 'Pixel Reveal Tool'),
-          stateButton('tool', 'erase', 'Eraser'),
+          stateButton('tool', 'erase', 'Eraser')
         ])
       }
     }
     let imageSelectorButton = null
     if (!vnode.attrs.game.hasImage() && vnode.attrs.game.role !== 'judge') {
-      imageSelectorButton = m('button.canvas-button', {onclick: () => vnode.state.imageSelectorVisible = true}, 'Select Image...')
+      imageSelectorButton = m('button.canvas-button', {onclick: () => { vnode.state.imageSelectorVisible = true }}, 'Select Image...')
     }
-    let pageWidth = Math.min(screen.width, (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth))
+    let pageWidth = Math.min(window.screen.width, (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth))
     return m('div', [
       m('.col.gap-4.justify', [
-        pageWidth<=MOBILE_MAX_WIDTH ? null : [description(),m('hr')],
+        pageWidth <= MOBILE_MAX_WIDTH ? null : [description(), m('hr')],
         m('.row.gap-4', [
-          pageWidth<=MOBILE_MAX_WIDTH ? null : m('.tools.col.gap-3', [
+          pageWidth <= MOBILE_MAX_WIDTH ? null : m('.tools.col.gap-3', [
             m('.col.gap-1.justify', [
               m('h2', 'Game Link'),
               m('a', {href: `/game/${vnode.attrs.game.code}`}, `/game/${vnode.attrs.game.code}`),
@@ -406,19 +405,19 @@ export default {
             m('hr'),
             m('.col.gap-1.justify', [
               m('h2', 'Current Role'),
-              roleSection,
+              roleSection
             ]),
             vnode.attrs.game.role === 'judge' ? null : [
               m('hr'),
               m('.col.gap-1.justify', [
                 m('h2', 'Coin Flip'),
                 m('span.coinResults', {
-                  oncreate: (vnode) => vnode.state.coinHash = coinHash,
+                  oncreate: (vnode) => { vnode.state.coinHash = coinHash },
                   onupdate: (vnode) => {
                     if (vnode.state.coinHash !== coinHash) {
                       vnode.state.coinHash = coinHash
                       vnode.dom.style.animation = 'none'
-                      vnode.dom.offsetWidth // reflow
+                      vnode.dom.getBoundingClientRect() // reflow
                       vnode.dom.style.animation = null
                     }
                   }
@@ -434,7 +433,7 @@ export default {
               vnode.attrs.game.reset()
             }}, 'Reset Board & Roles')
           ]),
-          m(pageWidth>TABLET_MAX_WIDTH ? '.row.gap-4' : '.col.gap-2.center', [
+          m(pageWidth > TABLET_MAX_WIDTH ? '.row.gap-4' : '.col.gap-2.center', [
             m('.col.gap-2', [
               m('.col', [
                 m('.play-wrap.center.middle', [
@@ -442,11 +441,11 @@ export default {
                   imageSelectorButton
                 ])
               ]),
-              m('.row.gap-2.middle.left', toolbar),
+              m('.row.gap-2.middle.left', toolbar)
             ]),
             m('.col.gap-3', [
-              pageWidth<=MOBILE_MAX_WIDTH ? null : m('h2', 'Zoom'),
-              m('canvas#loupe', {width: 600, height:600, style: `width: ${pageWidth<=MOBILE_MAX_WIDTH ? '40vh' : '100%'}; max-width: 250px; max-height: 250px;`}),
+              pageWidth <= MOBILE_MAX_WIDTH ? null : m('h2', 'Zoom'),
+              m('canvas#loupe', {width: 600, height: 600, style: `width: ${pageWidth <= MOBILE_MAX_WIDTH ? '40vh' : '100%'}; max-width: 250px; max-height: 250px;`}),
               rectCoordsView
             ])
           ])
@@ -454,8 +453,8 @@ export default {
         vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
       ]),
       vnode.state.imageSelectorVisible
-        ? m(ImageSelector, {game: vnode.attrs.game, close: () => vnode.state.imageSelectorVisible = false})
-        : null,
+        ? m(ImageSelector, {game: vnode.attrs.game, close: () => { vnode.state.imageSelectorVisible = false }})
+        : null
     ])
   }
 }
