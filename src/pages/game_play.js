@@ -26,7 +26,7 @@ function drawGame (vnode, canvas, isLoupe, dx=0, dy=0) {
       if (!isLoupe && vnode.state.mouseIsOver) {
         // fade background image if mouse is over image
         ctx.lineWidth = 0
-        ctx.fillStyle = 'rgba(255,255,255,0.2)'
+        ctx.fillStyle = 'rgba(255,255,255,0.1)'
         ctx.fillRect(0,0,vnode.state.canvas.width, vnode.state.canvas.height)
       }
     }
