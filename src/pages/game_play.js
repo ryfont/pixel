@@ -376,7 +376,10 @@ export default {
         roleSection = roleSection.concat([
           m('button', {onclick: () => {
             endRect(vnode)
-          }}, 'End Rectangle')
+          }}, 'End Rectangle'),
+          m('button', {onclick: () => {
+            vnode.state.currentRect = null
+          }}, 'Cancel Rectangle')
         ])
       } else if (vnode.state.touchMode) {
         roleSection = roleSection.concat([
