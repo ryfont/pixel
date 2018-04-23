@@ -235,7 +235,7 @@ export default {
     setCanvasSize(vnode.state.canvas, 500, 500)
     vnode.state.canvas.onmousedown = event => {
       vnode.state.touchMode = false
-      if (vnode.attrs.game.role === 'judge' || vnode.attrs.role !== vnode.state.viewingPlayer || !vnode.attrs.game.hasImage()) {
+      if (vnode.attrs.game.role === 'judge' || vnode.attrs.game.role !== vnode.state.viewingPlayer || !vnode.attrs.game.hasImage()) {
         return
       }
       if (vnode.state.tool === 'erase') {
