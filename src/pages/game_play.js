@@ -228,6 +228,7 @@ export default {
     }
     reset()
     vnode.attrs.game.onReset(reset)
+    vnode.attrs.game.onReset(m.redraw)
   },
   oncreate: (vnode) => {
     vnode.state.canvas = document.getElementById('play')

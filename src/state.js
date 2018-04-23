@@ -129,10 +129,12 @@ export class Game {
     this.dbref.on('value', snap => {
       this.state = snap.val()
       this.onUpdates.forEach(f => { f() })
-      if (this.lastGameNum !== null && ['red', 'blue'].indexOf(this.role) >= 0 && this.lastGameNum !== this.state.gameNum) {
+      if (this.lastGameNum !== null && this.lastGameNum !== this.state.gameNum) {
         // game has been reset!
-        this.setRole('judge')
-        this.role = 'judge'
+        if (this.role !== 'judge') {
+          this.setRole('judge')
+          this.role = 'judge'
+        }
         this.onResets.forEach(f => { f() })
       }
       this.lastGameNum = this.state.gameNum
