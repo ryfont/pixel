@@ -184,6 +184,7 @@ hr {
 .loupe-wrap-mobile {
   width: 100%;
   overflow: hidden;
+  max-height: calc(100vw - 50px);
 }
 .game-wrap-mobile {
   min-height: calc(100vh - 50px);
