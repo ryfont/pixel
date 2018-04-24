@@ -517,7 +517,7 @@ export default {
             play,
             imageSelectorButton
           ]),
-          m('.loupe-wrap-mobile.fill.middle', [
+          m('.loupe-wrap-mobile.fill', [
             loupe
           ])
         ]),
