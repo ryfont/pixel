@@ -341,7 +341,7 @@ export default {
         toolbar.push(m('a.hint', {href: vnode.attrs.game.attribution().url}, vnode.attrs.game.attribution().text))
       }
     } else {
-      toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
+      toolbar.push(m('div', {style: 'flex-shrink: 0;'}, stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage())))
     }
     toolbar = m('.row.gap-2.middle.left', toolbar)
     let rectCoordsView = null
