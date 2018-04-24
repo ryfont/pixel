@@ -494,6 +494,7 @@ export default {
         mobileTools = [
           m('button', {onclick: () => {vnode.state.showToolsMobile = false}}, 'Back to Game'),
           tools,
+          m('hr'),
           toolbar
         ]
       } else if (vnode.attrs.game.role === 'judge') {
