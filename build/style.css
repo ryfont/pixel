@@ -125,7 +125,7 @@ hr {
 }
 .play-wrap-mobile>#play {
   max-width: calc(100vw - 50px);
-  max-height: calc(100vw - 50px);
+  max-height: calc(60vh - 50px);
 }
 .tools-desktop {
   width: 150px;
