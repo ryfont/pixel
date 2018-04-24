@@ -126,6 +126,15 @@ function updateLoupe (vnode) {
   loupeCtx.setLineDash([])
 }
 
+function updateCanvasSize (vnode) {
+  if (vnode.state.imgSize) {
+    let {width, height} = vnode.state.imgSize
+    setCanvasSize(vnode.state.canvas, width, height)
+  } else {
+    setCanvasSize(vnode.state.canvas, 500, 500)
+  }
+}
+
 function updateImage (vnode) {
   if (vnode.attrs.game.imageUrl() !== vnode.state.lastImageUrl) {
     vnode.state.lastImageUrl = vnode.attrs.game.imageUrl()
@@ -134,15 +143,17 @@ function updateImage (vnode) {
       vnode.attrs.game.image().then(imgCanvas => {
         if (vnode.state.lastImageUrl === thisImageUrl) { // ensure it hasn't been changed again in the meantime
           vnode.state.imgCanvas = imgCanvas
-          setCanvasSize(vnode.state.canvas, imgCanvas.width, imgCanvas.height)
+          let {width, height} = imgCanvas
+          vnode.state.imgSize = {width, height}
+          updateCanvasSize(vnode)
           m.redraw()
         }
       })
     } else {
       vnode.state.imgCanvas = null
-      setCanvasSize(vnode.state.canvas, 500, 500)
     }
   }
+  updateCanvasSize(vnode)
 }
 
 function pixelColor (vnode, pos) {
@@ -195,6 +206,82 @@ function eraseClosestRect (vnode) {
   }
 }
 
+function initCanvas (vnode) {
+  vnode.state.canvas = document.getElementById('play')
+  vnode.state.loupe = document.getElementById('loupe')
+  setCanvasSize(vnode.state.canvas, 500, 500)
+  vnode.state.canvas.onmousedown = event => {
+    vnode.state.touchMode = false
+    if (vnode.attrs.game.role === 'judge' || !vnode.attrs.game.hasImage()) {
+      return
+    }
+    if (vnode.state.tool === 'erase') {
+      eraseClosestRect(vnode)
+    } else if (vnode.state.tool === 'pixel') {
+      makePixel(vnode)
+    } else if (vnode.state.tool === 'rect') {
+      startRect(vnode)
+    }
+    m.redraw()
+  }
+  vnode.state.canvas.onmouseup = event => {
+    vnode.state.touchMode = false
+    if (vnode.state.tool === 'rect') {
+      endRect(vnode)
+      m.redraw()
+    }
+  }
+  vnode.state.canvas.onmousemove = event => {
+    vnode.state.touchMode = false
+    vnode.state.mouseIsOver = true
+    let {x, y} = getMouseCoords(vnode.state.canvas, event)
+    setMousePos(vnode, x, y)
+    m.redraw()
+  }
+  vnode.state.canvas.onmouseover = () => {
+    vnode.state.touchMode = false
+    vnode.state.mouseIsOver = true
+    m.redraw()
+  }
+  vnode.state.canvas.onmouseout = () => {
+    vnode.state.touchMode = false
+    vnode.state.mouseIsOver = false
+    vnode.state.closestRect = null
+    m.redraw()
+  }
+  let ontouch = (e) => {
+    if (vnode.attrs.game.role !== 'judge' && !vnode.attrs.game.hasImage()) {
+      // the set image button has appeared
+      return
+    }
+    e.preventDefault()
+    vnode.state.touchMode = true
+    vnode.state.mouseIsOver = false
+    let {x, y} = getMouseCoords(vnode.state.canvas, e)
+    setMousePos(vnode, x, y)
+    m.redraw()
+  }
+  vnode.state.canvas.ontouchstart = ontouch
+  vnode.state.canvas.ontouchmove = ontouch
+  vnode.state.loupe.ontouchstart = (e) => {
+    vnode.state.touchMode = true
+    e.preventDefault()
+    vnode.state.lastTouchPosition = getMouseCoords(vnode.state.loupe, e)
+  }
+  vnode.state.loupe.ontouchmove = (e) => {
+    let {x, y} = getMouseCoords(vnode.state.loupe, e)
+    let pixelMult = 250 / (LOUPE_VIEW_PAD * 2 + 1)
+    setMousePos(vnode,
+      vnode.state.mousePos.x - (x - vnode.state.lastTouchPosition.x) / pixelMult,
+      vnode.state.mousePos.y - (y - vnode.state.lastTouchPosition.y) / pixelMult)
+    vnode.state.lastTouchPosition = {x, y}
+    m.redraw()
+  }
+  vnode.state.loupe.ontouchend = (e) => {
+    vnode.state.lastTouchPosition = null
+  }
+}
+
 export default {
   oninit: (vnode) => {
     let reset = () => {
@@ -217,84 +304,17 @@ export default {
   },
   oncreate: (vnode) => {
     window.onresize = m.redraw
-    vnode.state.canvas = document.getElementById('play')
-    vnode.state.loupe = document.getElementById('loupe')
-    setCanvasSize(vnode.state.canvas, 500, 500)
-    vnode.state.canvas.onmousedown = event => {
-      vnode.state.touchMode = false
-      if (vnode.attrs.game.role === 'judge' || !vnode.attrs.game.hasImage()) {
-        return
-      }
-      if (vnode.state.tool === 'erase') {
-        eraseClosestRect(vnode)
-      } else if (vnode.state.tool === 'pixel') {
-        makePixel(vnode)
-      } else if (vnode.state.tool === 'rect') {
-        startRect(vnode)
-      }
-      m.redraw()
-    }
-    vnode.state.canvas.onmouseup = event => {
-      vnode.state.touchMode = false
-      if (vnode.state.tool === 'rect') {
-        endRect(vnode)
-        m.redraw()
-      }
-    }
-    vnode.state.canvas.onmousemove = event => {
-      vnode.state.touchMode = false
-      vnode.state.mouseIsOver = true
-      let {x, y} = getMouseCoords(vnode.state.canvas, event)
-      setMousePos(vnode, x, y)
-      m.redraw()
-    }
-    vnode.state.canvas.onmouseover = () => {
-      vnode.state.touchMode = false
-      vnode.state.mouseIsOver = true
-      m.redraw()
-    }
-    vnode.state.canvas.onmouseout = () => {
-      vnode.state.touchMode = false
-      vnode.state.mouseIsOver = false
-      vnode.state.closestRect = null
-      m.redraw()
-    }
-    let ontouch = (e) => {
-      if (vnode.attrs.game.role !== 'judge' && !vnode.attrs.game.hasImage()) {
-        // the set image button has appeared
-        return
-      }
-      e.preventDefault()
-      vnode.state.touchMode = true
-      vnode.state.mouseIsOver = false
-      let {x, y} = getMouseCoords(vnode.state.canvas, e)
-      setMousePos(vnode, x, y)
-      m.redraw()
-    }
-    vnode.state.canvas.ontouchstart = ontouch
-    vnode.state.canvas.ontouchmove = ontouch
-    vnode.state.loupe.ontouchstart = (e) => {
-      vnode.state.touchMode = true
-      e.preventDefault()
-      vnode.state.lastTouchPosition = getMouseCoords(vnode.state.loupe, e)
-    }
-    vnode.state.loupe.ontouchmove = (e) => {
-      let {x, y} = getMouseCoords(vnode.state.loupe, e)
-      let pixelMult = 250 / (LOUPE_VIEW_PAD * 2 + 1)
-      setMousePos(vnode,
-        vnode.state.mousePos.x - (x - vnode.state.lastTouchPosition.x) / pixelMult,
-        vnode.state.mousePos.y - (y - vnode.state.lastTouchPosition.y) / pixelMult)
-      vnode.state.lastTouchPosition = {x, y}
-      m.redraw()
-    }
-    vnode.state.loupe.ontouchend = (e) => {
-      vnode.state.lastTouchPosition = null
-    }
+    initCanvas(vnode)
+    vnode.state.canvas.setup = true
     updateImage(vnode)
     updateCanvas(vnode)
     updateLoupe(vnode)
   },
   onupdate: (vnode) => {
+    if (!document.getElementById('play').setup) {
+      initCanvas(vnode)
+      vnode.state.canvas.setup = true
+    }
     updateImage(vnode)
     updateCanvas(vnode)
     updateLoupe(vnode)
@@ -319,6 +339,7 @@ export default {
     } else {
       toolbar.push(stateButton('revealImage', true, 'Reveal Image', !vnode.attrs.game.hasImage()))
     }
+    toolbar = m('.row.gap-2.middle.left', toolbar)
     let rectCoordsView = null
     if (vnode.state.mouseIsOver || vnode.state.touchMode) {
       if (vnode.state.currentRect) {
@@ -392,69 +413,104 @@ export default {
       imageSelectorButton = m('button.canvas-button', {onclick: () => { vnode.state.imageSelectorVisible = true }}, 'Select Image...')
     }
     let pageWidth = Math.min(window.screen.width, (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth))
-    return m('div', [
-      m('.col.gap-4.justify', [
-        pageWidth <= MOBILE_MAX_WIDTH ? null : [description(), m('hr')],
-        m('.row.gap-4', [
-          pageWidth <= MOBILE_MAX_WIDTH ? null : m('.tools.col.gap-3', [
-            m('.col.gap-1.justify', [
-              m('h2', 'Game Link'),
-              m('a', {href: `/game/${vnode.attrs.game.code}`}, `/game/${vnode.attrs.game.code}`),
-              m('p.hint', 'Copy, paste, and send link to invite others to join this game.')
-            ]),
-            m('hr'),
-            m('.col.gap-1.justify', [
-              m('h2', 'Current Role'),
-              roleSection
-            ]),
-            vnode.attrs.game.role === 'judge' ? null : [
-              m('hr'),
-              m('.col.gap-1.justify', [
-                m('h2', 'Coin Flip'),
-                m('span.coinResults', {
-                  oncreate: (vnode) => { vnode.state.coinHash = coinHash },
-                  onupdate: (vnode) => {
-                    if (vnode.state.coinHash !== coinHash) {
-                      vnode.state.coinHash = coinHash
-                      vnode.dom.style.animation = 'none'
-                      vnode.dom.getBoundingClientRect() // reflow
-                      vnode.dom.style.animation = null
-                    }
-                  }
-                }, coinResult ? 'Heads' : 'Tails'),
-                m('button', {onclick: () => {
-                  vnode.attrs.game.coinflip()
-                }}, 'Flip Coin'),
-                m('p.hint', 'Only debaters can see the result of coin flips.')
+    let loupe = m('canvas#loupe', {width: 600, height: 600, style: `width: 100%;`})
+    let tools = m('.tools.col.gap-3', [
+      m('.col.gap-1.justify', [
+        m('h2', 'Game Link'),
+        m('a', {href: `/game/${vnode.attrs.game.code}`}, `/game/${vnode.attrs.game.code}`),
+        m('p.hint', 'Copy, paste, and send link to invite others to join this game.')
+      ]),
+      m('hr'),
+      m('.col.gap-1.justify', [
+        m('h2', 'Current Role'),
+        roleSection
+      ]),
+      vnode.attrs.game.role === 'judge' ? null : [
+        m('hr'),
+        m('.col.gap-1.justify', [
+          m('h2', 'Coin Flip'),
+          m('span.coinResults', {
+            oncreate: (vnode) => { vnode.state.coinHash = coinHash },
+            onupdate: (vnode) => {
+              if (vnode.state.coinHash !== coinHash) {
+                vnode.state.coinHash = coinHash
+                vnode.dom.style.animation = 'none'
+                vnode.dom.getBoundingClientRect() // reflow
+                vnode.dom.style.animation = null
+              }
+            }
+          }, coinResult ? 'Heads' : 'Tails'),
+          m('button', {onclick: () => {
+            vnode.attrs.game.coinflip()
+          }}, 'Flip Coin'),
+          m('p.hint', 'Only debaters can see the result of coin flips.')
+        ])
+      ],
+      m('hr'),
+      m('button', {onclick: () => {
+        vnode.attrs.game.reset()
+      }}, 'Reset Board & Roles')
+    ])
+    let play = m('canvas#play', {style: 'cursor: crosshair;'})
+    if (pageWidth > MOBILE_MAX_WIDTH) {
+      return m('div', [
+        m('.col.gap-4.justify', [
+          [description(), m('hr')],
+          m('.row.gap-4', [
+            tools,
+            m(pageWidth > TABLET_MAX_WIDTH ? '.row.gap-4' : '.col.gap-2.center', [
+              m('.col.gap-2', [
+                m('.col', [
+                  m('.play-wrap-desktop.center.middle', [
+                    play,
+                    imageSelectorButton
+                  ])
+                ]),
+                toolbar
+              ]),
+              m('.col.gap-3', [
+                m('h2', 'Zoom'),
+                m('.loupe-wrap-desktop', [
+                  loupe
+                ]),
+                rectCoordsView
               ])
-            ],
-            m('hr'),
-            m('button', {onclick: () => {
-              vnode.attrs.game.reset()
-            }}, 'Reset Board & Roles')
+            ])
           ]),
-          m(pageWidth > TABLET_MAX_WIDTH ? '.row.gap-4' : '.col.gap-2.center', [
-            m('.col.gap-2', [
-              m('.col', [
-                m('.play-wrap.center.middle', [
-                  m('canvas#play', {style: 'cursor: crosshair; width: 100%;'}),
-                  imageSelectorButton
+          vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
+        ]),
+        vnode.state.imageSelectorVisible
+          ? m(ImageSelector, {game: vnode.attrs.game, close: () => { vnode.state.imageSelectorVisible = false }})
+          : null
+      ])
+    } else {
+      return m('div', [
+        // tools,
+        // toolbar
+        m('.col.gap-4.justify', [
+          m('.row.gap-4', [
+            m('.col.gap-2.center', [
+              m('.col.gap-2', [
+                m('.col', [
+                  m('.play-wrap-mobile.center.middle', [
+                    play,
+                    imageSelectorButton
+                  ])
                 ])
               ]),
-              m('.row.gap-2.middle.left', toolbar)
-            ]),
-            m('.col.gap-3', [
-              pageWidth <= MOBILE_MAX_WIDTH ? null : m('h2', 'Zoom'),
-              m('canvas#loupe', {width: 600, height: 600, style: `width: ${pageWidth <= MOBILE_MAX_WIDTH ? '40vh' : '100%'}; max-width: 250px; max-height: 250px;`}),
-              rectCoordsView
+              m('.col.gap-3', [
+                m('.loupe-wrap-mobile.middle', [
+                  loupe
+                ])
+              ])
             ])
-          ])
+          ]),
+          vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
         ]),
-        vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
-      ]),
-      vnode.state.imageSelectorVisible
-        ? m(ImageSelector, {game: vnode.attrs.game, close: () => { vnode.state.imageSelectorVisible = false }})
-        : null
-    ])
+        vnode.state.imageSelectorVisible
+          ? m(ImageSelector, {game: vnode.attrs.game, close: () => { vnode.state.imageSelectorVisible = false }})
+          : null
+      ])
+    }
   }
 }

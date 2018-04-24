@@ -3,8 +3,7 @@ import {ERASER_SIZE, PIXEL_DENSITY} from './constants'
 export function setCanvasSize (canvas, width, height) {
   canvas.width = width * PIXEL_DENSITY
   canvas.height = height * PIXEL_DENSITY
-  canvas.style.maxWidth = `${width}px`
-  canvas.style.maxHeight = `${height}px`
+  // canvas.style.maxWidth = `${width}px`
 }
 
 export function getMouseCoords (canvas, event) {
