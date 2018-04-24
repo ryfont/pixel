@@ -501,8 +501,10 @@ export default {
         mobileTools = [m('button', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More')]
       } else if (vnode.state.currentRect) {
         mobileTools = m('.col.gap-2', [
-          m('button', {onclick: () => endRect(vnode)}, 'End Rect'),
-          m('button', {onclick: () => {vnode.state.currentRect = null}}, 'Cancel Rect'),
+          m('.row.gap-2', [
+            m('button', {onclick: () => endRect(vnode)}, 'End Rect'),
+            m('button', {onclick: () => {vnode.state.currentRect = null}}, 'Cancel Rect'),
+          ]),
         ])
       } else {
         mobileTools = m('.col.gap-2', [
