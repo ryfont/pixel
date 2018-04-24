@@ -503,7 +503,7 @@ export default {
       } else {
         mobileTools = m('.row.gap-2', [
           m('button.fill', {onclick: () => startRect(vnode)}, 'Start Rect'),
-          m('button.fill', {onclick: () => makePixel(vnode)}, 'Make Pixel'),
+          m('button.fill', {onclick: () => makePixel(vnode)}, 'Show Pixel'),
           m('button.fill', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More'),
         ])
       }
