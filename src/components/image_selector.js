@@ -104,7 +104,7 @@ export default {
       }
     }
 
-    return m('.modal-bg.center.top', {onclick: vnode.attrs.close}, [
+    return m('.modal-bg', {onclick: vnode.attrs.close}, [
       m('.modal.col.gap-2.left', {onclick: (e) => e.stopPropagation()}, [
         m('p', m('strong', 'Select an Image')),
         m('p', 'Search for an image or provide a URL to a custom image.'),

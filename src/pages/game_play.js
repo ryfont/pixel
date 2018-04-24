@@ -297,6 +297,7 @@ export default {
       vnode.state.mouseIsOver = false
       vnode.state.imageSelectorVisible = false
       vnode.state.touchMode = false
+      vnode.state.showToolsMobile = false
     }
     reset()
     vnode.attrs.game.onReset(reset)
@@ -332,7 +333,9 @@ export default {
 
     let toolbar = []
     if (vnode.state.revealImage) {
-      toolbar.push(stateButton('revealImage', false, 'Hide Image', !vnode.attrs.game.hasImage()))
+      toolbar.push(
+        m('div', {style: 'flex-shrink: 0;'}, stateButton('revealImage', false, 'Hide Image', !vnode.attrs.game.hasImage()))
+      )
       if (vnode.attrs.game.attribution()) {
         toolbar.push(m('a.hint', {href: vnode.attrs.game.attribution().url}, vnode.attrs.game.attribution().text))
       }
@@ -414,7 +417,7 @@ export default {
     }
     let pageWidth = Math.min(window.screen.width, (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth))
     let loupe = m('canvas#loupe', {width: 600, height: 600, style: `width: 100%;`})
-    let tools = m('.tools.col.gap-3', [
+    let tools = m('.col.gap-3', [
       m('.col.gap-1.justify', [
         m('h2', 'Game Link'),
         m('a', {href: `/game/${vnode.attrs.game.code}`}, `/game/${vnode.attrs.game.code}`),
@@ -457,7 +460,7 @@ export default {
         m('.col.gap-4.justify', [
           [description(), m('hr')],
           m('.row.gap-4', [
-            tools,
+            m('.tools-desktop', [tools]),
             m(pageWidth > TABLET_MAX_WIDTH ? '.row.gap-4' : '.col.gap-2.center', [
               m('.col.gap-2', [
                 m('.col', [
@@ -484,28 +487,37 @@ export default {
           : null
       ])
     } else {
+      let mobileTools
+      if (vnode.state.showToolsMobile) {
+        mobileTools = [
+          m('button', {onclick: () => {vnode.state.showToolsMobile = false}}, 'Less'),
+          tools,
+          toolbar
+        ]
+      } else if (vnode.state.currentRect) {
+        mobileTools = m('.row.gap-2', [
+          m('button.fill', {onclick: () => endRect(vnode)}, 'End Rect'),
+          m('button.fill', {onclick: () => {vnode.state.currentRect = null}}, 'Cancel Rect'),
+          m('button.fill', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More'),
+        ])
+      } else {
+        mobileTools = m('.row.gap-2', [
+          m('button.fill', {onclick: () => startRect(vnode)}, 'Start Rect'),
+          m('button.fill', {onclick: () => makePixel(vnode)}, 'Make Pixel'),
+          m('button.fill', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More'),
+        ])
+      }
       return m('div', [
-        // tools,
         // toolbar
-        m('.col.gap-4.justify', [
-          m('.row.gap-4', [
-            m('.col.gap-2.center', [
-              m('.col.gap-2', [
-                m('.col', [
-                  m('.play-wrap-mobile.center.middle', [
-                    play,
-                    imageSelectorButton
-                  ])
-                ])
-              ]),
-              m('.col.gap-3', [
-                m('.loupe-wrap-mobile.middle', [
-                  loupe
-                ])
-              ])
-            ])
+        m('.col.gap-2.justify.game-wrap-mobile', [
+          mobileTools,
+          m('.play-wrap-mobile.center.middle', [
+            play,
+            imageSelectorButton
           ]),
-          vnode.attrs.game.connected ? null : m('div', 'Disconnected! Trying to reconnect...')
+          m('.loupe-wrap-mobile.fill.middle', [
+            loupe
+          ])
         ]),
         vnode.state.imageSelectorVisible
           ? m(ImageSelector, {game: vnode.attrs.game, close: () => { vnode.state.imageSelectorVisible = false }})
