@@ -494,6 +494,8 @@ export default {
           tools,
           toolbar
         ]
+      } else if (vnode.attrs.game.role === 'judge') {
+        mobileTools = [m('button', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More')]
       } else if (vnode.state.currentRect) {
         mobileTools = m('.row.gap-2', [
           m('button.fill', {onclick: () => endRect(vnode)}, 'End Rect'),
