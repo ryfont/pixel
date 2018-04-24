@@ -509,8 +509,6 @@ export default {
           m('.row.gap-2', [
             m('button.fill', {onclick: () => startRect(vnode)}, 'Start Rect'),
             m('button.fill', {onclick: () => makePixel(vnode)}, 'Show Pixel'),
-          ]),
-          m('.row.gap-2', [
             m('button.fill', {disabled: !vnode.state.closestRect,
               onclick: () => {
                 eraseClosestRect(vnode)
