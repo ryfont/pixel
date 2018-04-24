@@ -321,6 +321,7 @@ export default {
     updateLoupe(vnode)
   },
   view: (vnode) => {
+    let pageWidth = window.screen.width
     const stateButton = (type, name, label, disable = false, customClass = '') => {
       return m('button', {
         class: customClass + (vnode.state[type] === name ? ' selected' : ''),
@@ -381,41 +382,42 @@ export default {
     } else {
       let roleName = capitalize(vnode.attrs.game.role)
       roleSection.push(m(`.role-${vnode.attrs.game.role}`, `${roleName} Player`))
-      if (vnode.state.touchMode && vnode.state.currentRect) {
-        roleSection = roleSection.concat([
-          m('button', {onclick: () => {
-            endRect(vnode)
-          }}, 'End Rectangle'),
-          m('button', {onclick: () => {
-            vnode.state.currentRect = null
-          }}, 'Cancel Rectangle')
-        ])
-      } else if (vnode.state.touchMode) {
-        roleSection = roleSection.concat([
-          m('button', {onclick: () => {
-            startRect(vnode)
-          }}, 'Start Rectangle'),
-          m('button', {onclick: () => {
-            makePixel(vnode)
-          }}, 'Reveal Pixel'),
-          m('button', {disabled: !vnode.state.closestRect,
-            onclick: () => {
-              eraseClosestRect(vnode)
-            }}, 'Erase')
-        ])
-      } else {
-        roleSection = roleSection.concat([
-          stateButton('tool', 'rect', 'Rectangle Tool'),
-          stateButton('tool', 'pixel', 'Pixel Reveal Tool'),
-          stateButton('tool', 'erase', 'Eraser')
-        ])
+      if (pageWidth > MOBILE_MAX_WIDTH) {
+        if (vnode.state.touchMode && vnode.state.currentRect) {
+          roleSection = roleSection.concat([
+            m('button', {onclick: () => {
+              endRect(vnode)
+            }}, 'End Rectangle'),
+            m('button', {onclick: () => {
+              vnode.state.currentRect = null
+            }}, 'Cancel Rectangle')
+          ])
+        } else if (vnode.state.touchMode) {
+          roleSection = roleSection.concat([
+            m('button', {onclick: () => {
+              startRect(vnode)
+            }}, 'Start Rectangle'),
+            m('button', {onclick: () => {
+              makePixel(vnode)
+            }}, 'Reveal Pixel'),
+            m('button', {disabled: !vnode.state.closestRect,
+              onclick: () => {
+                eraseClosestRect(vnode)
+              }}, 'Erase')
+          ])
+        } else {
+          roleSection = roleSection.concat([
+            stateButton('tool', 'rect', 'Rectangle Tool'),
+            stateButton('tool', 'pixel', 'Pixel Reveal Tool'),
+            stateButton('tool', 'erase', 'Eraser')
+          ])
+        }
       }
     }
     let imageSelectorButton = null
     if (!vnode.attrs.game.hasImage() && vnode.attrs.game.role !== 'judge') {
       imageSelectorButton = m('button.canvas-button', {onclick: () => { vnode.state.imageSelectorVisible = true }}, 'Select Image...')
     }
-    let pageWidth = Math.min(window.screen.width, (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth))
     let loupe = m('canvas#loupe', {width: 600, height: 600, style: `width: 100%;`})
     let tools = m('.col.gap-3', [
       m('.col.gap-1.justify', [
@@ -490,34 +492,41 @@ export default {
       let mobileTools
       if (vnode.state.showToolsMobile) {
         mobileTools = [
-          m('button', {onclick: () => {vnode.state.showToolsMobile = false}}, 'Less'),
+          m('button', {onclick: () => {vnode.state.showToolsMobile = false}}, 'Back to Game'),
           tools,
           toolbar
         ]
       } else if (vnode.attrs.game.role === 'judge') {
         mobileTools = [m('button', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More')]
       } else if (vnode.state.currentRect) {
-        mobileTools = m('.row.gap-2', [
-          m('button.fill', {onclick: () => endRect(vnode)}, 'End Rect'),
-          m('button.fill', {onclick: () => {vnode.state.currentRect = null}}, 'Cancel Rect'),
-          m('button.fill', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More'),
+        mobileTools = m('.col.gap-2', [
+          m('button', {onclick: () => endRect(vnode)}, 'End Rect'),
+          m('button', {onclick: () => {vnode.state.currentRect = null}}, 'Cancel Rect'),
         ])
       } else {
-        mobileTools = m('.row.gap-2', [
-          m('button.fill', {onclick: () => startRect(vnode)}, 'Start Rect'),
-          m('button.fill', {onclick: () => makePixel(vnode)}, 'Show Pixel'),
-          m('button.fill', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More'),
+        mobileTools = m('.col.gap-2', [
+          m('.row.gap-2', [
+            m('button.fill', {onclick: () => startRect(vnode)}, 'Start Rect'),
+            m('button.fill', {onclick: () => makePixel(vnode)}, 'Show Pixel'),
+          ]),
+          m('.row.gap-2', [
+            m('button.fill', {disabled: !vnode.state.closestRect,
+              onclick: () => {
+                eraseClosestRect(vnode)
+              }}, 'Erase'),
+            m('button.fill', {onclick: () => {vnode.state.showToolsMobile = true}}, 'More'),
+          ]),
         ])
       }
+      let shouldHide = vnode.state.showToolsMobile ? 'display: none' : ''
       return m('div', [
-        // toolbar
         m('.col.gap-2.justify.game-wrap-mobile', [
           mobileTools,
-          m('.play-wrap-mobile.center.middle', [
+          m('.play-wrap-mobile.center.middle', {style: shouldHide}, [
             play,
             imageSelectorButton
           ]),
-          m('.loupe-wrap-mobile.fill.middle', [
+          m('.loupe-wrap-mobile.fill.middle', {style: shouldHide}, [
             loupe
           ])
         ]),
