@@ -20,7 +20,7 @@ export default {
           })
         }
       }, 'Create New Game'),
-      m('div', 'To join an existing game, use the link listed in your friend\'s game')
+      m('p', 'To join an existing game, use the link listed in your friend\'s game')
     ])
   }
 }
