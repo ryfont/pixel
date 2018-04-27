@@ -20,10 +20,12 @@ html {
   padding: 0;
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  overflow-x:hidden;
 }
 body {
   background-color: #EEEAEE;
   font-family: "Colfax", Helvetica, san-serif;
+  overflow-x:hidden;
 }
 .coinResults {
   animation: 1s reveal;
