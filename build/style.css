@@ -41,9 +41,10 @@ body {
   padding: 60px;
 }
 
+/* https://css-tricks.com/full-browser-width-bars */
 .col.gap-2.long-description {
   background-color: rgb(216, 210, 217);
-  margin: 1.5rem -9999rem;
+  margin: 1.1rem -9999rem;
   padding: 2.2rem 9999rem;
 };
 
