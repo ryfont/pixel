@@ -39,6 +39,12 @@ body {
   padding: 60px;
 }
 
+.col.gap-2.long-description {
+  background-color: rgb(216, 210, 217);
+  margin: 1.5rem -9999rem;
+  padding: 2.2rem 9999rem;
+};
+
 h1, h2, p, a {
   margin: 0;
 }

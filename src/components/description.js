@@ -10,7 +10,7 @@ export function short_description (link) {
 }
 
 export function long_description () {
-  return m('.col.gap-2', [
+  return m('.col.gap-2.long-description', [
     m('h1', 'Background'),
     m('p', [
       'We built this website to test one aspect of the ',
