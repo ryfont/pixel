@@ -51,9 +51,15 @@ h2 {
   color: #000;
   letter-spacing: 2px;
 }
-p {
-  max-width: 560px;
+p, ol, ul {
+  max-width: 655px;
   line-height: 1.5;
+}
+ol, ul {
+  margin: 0 0 0 0;
+}
+.beagle {
+  margin: 0 0 .8em 0;
 }
 .hint {
   color: #88809f;

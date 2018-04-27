@@ -1,6 +1,6 @@
 import m from 'mithril'
 import {freshNewGame} from '../state'
-import {description} from '../components/description'
+import {short_description, long_description} from '../components/description'
 
 export default {
   oninit: (vnode) => {
@@ -10,7 +10,7 @@ export default {
   },
   view: (vnode) => {
     return m('div.col.gap-3.left', [
-      description(),
+      short_description(false),
       m('button', {
         disabled: vnode.state.loading,
         onclick: () => {
@@ -20,7 +20,8 @@ export default {
           })
         }
       }, 'Create New Game'),
-      m('p', 'To join an existing game, use the link listed in your friend\'s game')
+      m('p', 'To join an existing game, use the link listed in your friend\'s game.'),
+      long_description(),
     ])
   }
 }

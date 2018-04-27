@@ -1,6 +1,6 @@
 import m from 'mithril'
 import ImageSelector from '../components/image_selector'
-import {description} from '../components/description'
+import {short_description} from '../components/description'
 import {COLORS, PIXEL_WIDTH, LOUPE_VIEW_PAD, PIXEL_DENSITY, MOBILE_MAX_WIDTH, TABLET_MAX_WIDTH} from '../constants'
 import {capitalize, closestRect, normalizeRect, setCanvasSize, getMouseCoords} from '../helpers'
 
@@ -460,7 +460,7 @@ export default {
     if (pageWidth > MOBILE_MAX_WIDTH) {
       return m('div', [
         m('.col.gap-4.justify', [
-          [description(), m('hr')],
+          [short_description(true), m('hr')],
           m('.row.gap-4', [
             m('.tools-desktop', [tools]),
             m(pageWidth > TABLET_MAX_WIDTH ? '.row.gap-4' : '.col.gap-2.center', [
