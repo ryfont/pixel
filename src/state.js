@@ -135,7 +135,7 @@ export class Game {
   _addDrawing (drawingType, data) {
     this._checkCanDraw()
     const entry = Object.assign({player: this.role}, data)
-    return this.dbref.child(drawingType).push(entry)
+    this.dbref.child(drawingType).push(entry)
   }
 
   _removeDrawing (drawingType, index) {
@@ -164,7 +164,7 @@ export class Game {
   }
 
   addPixel (x, y) {
-    return this._addDrawing('pixels', {x: x, y: y})
+    this._addDrawing('pixels', {x: x, y: y})
   }
 
   imageUrl () {
@@ -209,7 +209,7 @@ export class Game {
   }
 
   addRectangle (x, y, w, h) {
-    return this._addDrawing('rectangles', {x: x, y: y, w: w, h: h})
+    this._addDrawing('rectangles', {x: x, y: y, w: w, h: h})
   }
 
   removeRectangle (rectId) {
