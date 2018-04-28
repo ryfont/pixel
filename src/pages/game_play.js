@@ -31,47 +31,42 @@ function drawGame (vnode, canvas, isLoupe, dx = 0, dy = 0) {
       }
     }
   }
-  function drawRects (player, color) {
-    function drawRect (x, y, w, h, id) {
-      ctx.lineWidth = isLoupe ? 8 : 4
-      if (!isLoupe && id === vnode.state.closestRect && vnode.state.tool === 'erase' && player === vnode.attrs.game.role) {
-        ctx.strokeStyle = COLORS.SELECTION
-      } else {
-        ctx.strokeStyle = color
-      }
-      ctx.strokeRect((x + 0.5) * pixelMult - dx, (y + 0.5) * pixelMult - dy, w * pixelMult, h * pixelMult)
+
+  // Draw rectangles
+  function drawRect (player, x, y, w, h, id) {
+    ctx.lineWidth = isLoupe ? 8 : 4
+    if (!isLoupe && id === vnode.state.closestRect && vnode.state.tool === 'erase' && player === vnode.attrs.game.role) {
+      ctx.strokeStyle = COLORS.SELECTION
+    } else {
+      ctx.strokeStyle = player == 'red' ? COLORS.RED : COLORS.BLUE
     }
-    let rectangles = game.rectangles(player)
-    Object.keys(rectangles).forEach(rectId => {
-      let {x, y, w, h} = rectangles[rectId]
-      drawRect(x, y, w, h, rectId)
-    })
-    if (vnode.state.currentRect && player === vnode.attrs.game.role) {
-      let {x, y, w, h} = normalizeRect(vnode.state.currentRect)
-      drawRect(x, y, w, h, -1)
-    }
+    ctx.strokeRect((x + 0.5) * pixelMult - dx, (y + 0.5) * pixelMult - dy, w * pixelMult, h * pixelMult)
   }
-  drawRects('red', COLORS.RED)
-  drawRects('blue', COLORS.BLUE)
-  function pixelHandler (color) {
-    let drawnPixelWidth = isLoupe ? 1 : PIXEL_WIDTH
+  for (let [id,{player, x, y, w, h}] of Object.entries(game.rectangles())) {
+    drawRect(player, x, y, w, h, id)
+  }
+  if (vnode.state.currentRect) {
+    let {x, y, w, h} = normalizeRect(vnode.state.currentRect)
+    drawRect(vnode.attrs.game.role, x, y, w, h, -1)
+  }
+
+  // Draw pixels
+  if (vnode.state.imgCanvas) {
+    const drawnPixelWidth = isLoupe ? 1 : PIXEL_WIDTH
     ctx.lineWidth = isLoupe ? 5 : 3
-    ctx.strokeStyle = color
-    return ({x, y}) => {
-      if (vnode.state.imgCanvas) {
-        ctx.fillStyle = pixelColor(vnode, {x, y})
-        ctx.beginPath()
-        ctx.rect((x - drawnPixelWidth / 2 + 0.5) * pixelMult - dx,
-          (y - drawnPixelWidth / 2 + 0.5) * pixelMult - dy,
-          drawnPixelWidth * pixelMult,
-          drawnPixelWidth * pixelMult)
-        ctx.fill()
-        ctx.stroke()
-      }
+    for (let {player, x, y} of game.pixels()) {
+      ctx.strokeStyle = player == 'red' ? COLORS.RED_FULL : COLORS.BLUE_FULL
+      ctx.fillStyle = pixelColor(vnode, {x, y})
+      ctx.beginPath()
+      ctx.rect((x - drawnPixelWidth / 2 + 0.5) * pixelMult - dx,
+        (y - drawnPixelWidth / 2 + 0.5) * pixelMult - dy,
+        drawnPixelWidth * pixelMult,
+        drawnPixelWidth * pixelMult)
+      ctx.fill()
+      ctx.stroke()
     }
   }
-  game.pixels('red').forEach(pixelHandler(COLORS.RED_FULL))
-  game.pixels('blue').forEach(pixelHandler(COLORS.BLUE_FULL))
+
   if (vnode.state.touchMode && !isLoupe) {
     ctx.lineWidth = 2
     let p = vnode.state.mousePos

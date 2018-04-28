@@ -19,7 +19,6 @@ function loadImages (vnode) {
   })
     .then(function (result) {
       vnode.state.libraryData = []
-      console.log(result)
       if (!result.photos || !result.photos.photo) {
         console.error('bad response from flickr server:', result)
       }

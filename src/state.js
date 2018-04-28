@@ -35,35 +35,6 @@ function resizedImage (url) {
     })
 }
 
-function parsePixel (s) {
-  let nums = s.match(/(\d+),(\d+)/)
-  let res = {
-    x: parseInt(nums[1]),
-    y: parseInt(nums[2])
-  }
-  return res
-}
-
-function parseMultiplePixels (s) {
-  return s.split('|').map(parsePixel)
-}
-
-function serializeMultiplePixels (pixels) {
-  let parts = []
-  pixels.forEach(({x, y}) => {
-    parts.push([x, y].join(','))
-  })
-  return parts.join('|')
-}
-
-function nextIndex (obj) {
-  let i = 0
-  while (obj[i] !== undefined) {
-    i += 1
-  }
-  return i
-}
-
 // returns promise that resolves to true or false
 export function gameExists (checkId) {
   let gameState = app.database().ref(`games/${checkId}`)
@@ -163,21 +134,13 @@ export class Game {
 
   _addDrawing (drawingType, data) {
     this._checkCanDraw()
-
-    // normally you'd want to use firebase's .push() here, but since only one unique writer for each object,
-    // we can keep track of it locally
-    let i = 0
-    if (this.state[drawingType] !== undefined && this.state[drawingType][this.role] !== undefined) {
-      i = nextIndex(this.state[drawingType][this.role])
-    }
-    this.dbref.child(drawingType).child(this.role).child(i).set(data)
-    return i
+    const entry = Object.assign({player: this.role}, data)
+    return this.dbref.child(drawingType).push(entry)
   }
 
   _removeDrawing (drawingType, index) {
     this._checkCanDraw()
-    this.dbref.child(drawingType).child(this.role).child(index).set(null)
-    return index
+    this.dbref.child(drawingType).child(index).set(null)
   }
 
   // hash game code and state num to get who is the liar and who selects the image
@@ -193,16 +156,15 @@ export class Game {
       })
   }
 
-  pixels (player) {
-    if (this.state && this.state.pixels && this.state.pixels[player]) {
-      return Object.values(this.state.pixels[player]).map(parsePixel)
+  pixels () {
+    if (this.state && this.state.pixels) {
+      return Object.values(this.state.pixels)
     }
     return []
   }
 
   addPixel (x, y) {
-    let str = serializeMultiplePixels([{x, y}])
-    return this._addDrawing('pixels', str)
+    return this._addDrawing('pixels', {x: x, y: y})
   }
 
   imageUrl () {
@@ -240,26 +202,18 @@ export class Game {
     return this.state.attribution
   }
 
-  rectangles (player) {
-    if (this.state && this.state.rectangles && this.state.rectangles[player]) {
-      let result = {}
-      let rects = this.state.rectangles[player]
-      Object.keys(rects).forEach(rectId => {
-        let parsed = parseMultiplePixels(rects[rectId])
-        result[rectId] = {x: parsed[0].x, y: parsed[0].y, w: parsed[1].x, h: parsed[1].y}
-      })
-      return result
-    }
+  rectangles () {
+    if (this.state && this.state.rectangles)
+      return this.state.rectangles
     return {}
   }
 
   addRectangle (x, y, w, h) {
-    let str = serializeMultiplePixels([{x: x, y: y}, {x: w, y: h}])
-    return this._addDrawing('rectangles', str)
+    return this._addDrawing('rectangles', {x: x, y: y, w: w, h: h})
   }
 
   removeRectangle (rectId) {
-    return this._removeDrawing('rectangles', rectId)
+    this._removeDrawing('rectangles', rectId)
   }
 
   players () {
