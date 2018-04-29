@@ -417,7 +417,7 @@ export default {
     let tools = m('.col.gap-3', [
       m('.col.gap-1.justify', [
         m('h2', 'Game Link'),
-        m('a', {href: `/game/${vnode.attrs.game.code}`}, `/game/${vnode.attrs.game.code}`),
+        m('a', {href: `/game/${vnode.attrs.game.code}`, 'class': 'game-link'}, `/game/${vnode.attrs.game.code}`),
         m('p.hint', 'Copy, paste, and send link to invite others to join this game.')
       ]),
       m('hr'),

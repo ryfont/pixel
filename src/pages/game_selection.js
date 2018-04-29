@@ -15,7 +15,7 @@ export default {
         disabled: vnode.state.loading,
         onclick: () => {
           vnode.state.loading = true
-          freshNewGame().then((code) => {
+          freshNewGame().then(code => {
             m.route.set('/game/:code/judge', {code: code})
           })
         }

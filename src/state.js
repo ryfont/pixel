@@ -55,35 +55,22 @@ function gameTemplate (gameNum = 0) {
   }
 }
 
-// generates new game code and creates new game for it, and returns a promise containing the new game object
+// Unique random game id with 30 log2(62) ~= 178 bits of entropy
+function uniqueId () {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  const array = new Uint32Array(30)
+  window.crypto.getRandomValues(array)
+  return Array.from(array).map(k => chars.charAt(k % chars.length)).join('')
+}
+
+// Generates new game code and creates new game for it, and returns a promise containing the new game object
 export function freshNewGame () {
-  function genId (resolve) {
-    var newId = ''
-    var chars = 'abcdefghijkmnpqrstuvwxyz23456789'
-
-    for (let i = 0; i < 7; i++) {
-      newId += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-
-    // not sure how to avoid the race condition here with firebase
-    // but collisions are remarkably unlikely so I think it's ok
-    let gameState = app.database().ref(`games/${newId}`)
-    gameState
-      .once('value')
-      .then(snap => {
-        if (snap.val() === null) {
-          gameState.set(gameTemplate())
-          resolve(newId)
-        } else {
-          console.warn('GAME ALREADY EXISTS:', snap.val())
-          genId(resolve)
-        }
-      })
-  }
-
-  return new Promise(function (resolve, reject) {
-    genId(resolve)
-  })
+  // Don't need to worry about collisions since we have enough bits
+  const id = uniqueId()
+  return app.database()
+      .ref('games/' + id)
+      .set(gameTemplate())
+      .then(_ => id)
 }
 
 export class Game {
