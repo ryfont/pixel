@@ -10,10 +10,11 @@ function loadImages (vnode) {
       format: 'json',
       api_key: 'ba8a19a3cb594eacd876d73d36c531c4',
       method: 'flickr.photos.search',
-      tags: vnode.state.searchText,
+      text: vnode.state.searchText,
       content_type: 1,
       license: '1,2,3,4,5,6,7,8,9,10',
-      extras: 'owner_name,url_m,url_l,url_t,path_alias'
+      extras: 'owner_name,url_m,url_l,url_t,path_alias',
+      sort: 'relevance',
     },
     callbackKey: 'jsoncallback'
   })
