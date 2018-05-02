@@ -69,6 +69,8 @@ ol, ul {
 }
 .beagle {
   margin: 0 0 .8em 0;
+  width: 100%;
+  max-width: 655px;
 }
 .hint {
   color: #88809f;
