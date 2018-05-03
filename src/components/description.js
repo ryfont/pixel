@@ -20,8 +20,12 @@ export function long_description () {
       "Even in the single pixel version described here, we've found informally that the honest player ",
       'wins most of the time (though not always).  We are curious what others will find.'
     ]),
-    m('div', {'class': 'cargo-cult'}, [
+    m('figure', {'class': 'beagle-figure'}, [
       m('img', {src: '/debate-game-animation_4-26c.gif', width: 655, 'class': 'beagle'}),
+      m('figcaption', [
+        m('a', {href: 'https://commons.wikimedia.org/wiki/File:Beagle_puppy_sitting_on_grass.jpg'},
+          'Image credit: Wikipedia, CC-BY-SA.')
+      ]),
     ]),
     m('h1', 'Instructions'),
     m('p', 'Here are example instructions, assuming three players in the same room:'),

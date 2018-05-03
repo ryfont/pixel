@@ -67,6 +67,9 @@ p, ol, ul {
 ol, ul {
   margin: 0 0 0 0;
 }
+.beagle-figure {
+  width: 100%;
+}
 .beagle {
   margin: 0 0 .8em 0;
   width: 100%;
