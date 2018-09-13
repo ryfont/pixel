@@ -3,7 +3,7 @@ Database schema
 
 We use a Firebase Realtime Database to manage game state.  The ground truth for this
 file is at https://console.firebase.google.com/project/pixel-debate/database/pixel-debate/rules.
-The schema is mirred here since only OpenAI folk have access to that:
+The schema is mirrored here since only OpenAI folk have access to that:
 
 ```
 {
