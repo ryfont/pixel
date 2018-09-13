@@ -24,3 +24,9 @@ images.
 
     npm run fb login
     npm run deploy
+
+## Firebase database
+
+We use a Firebase Realtime Database to manage games.  The ground truth schema
+is only stored in Firebase, but see [database.md](database.md) for a copy.
+Please file an issue if that file appears to be out of date.
